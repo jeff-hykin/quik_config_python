@@ -8,17 +8,17 @@ import ez_yaml
 def find_and_load(file_name, *, default_options=[], go_to_root=True):
     """
     Example Python:
-        obj = find_and_load("info.yaml", default_options=["DEV"], go_to_root=True)
+        data = find_and_load("info.yaml", default_options=["DEV"], go_to_root=True)
     
     Returns:
-        obj.config # the resulting dictionary for all the selected options
-        obj.info                  # the dictionary to the whole file (info.yaml)
-        obj.project               # the dictionary to everything inside (project)
-        obj.root_path             # parent folder of the .yaml file
-        obj.path_to               # a dictionary of paths relative to the root_path
-        obj.absolute_path_to      # same dictionary of paths, but made absolute
-        obj.configuration         # the dictionary of the local config-choices files
-        obj.configuration_options # the dictionary of all possible options
+        data.config # the resulting dictionary for all the selected options
+        data.info                  # the dictionary to the whole file (info.yaml)
+        data.project               # the dictionary to everything inside (project)
+        data.root_path             # parent folder of the .yaml file
+        data.path_to               # a dictionary of paths relative to the root_path
+        data.absolute_path_to      # same dictionary of paths, but made absolute
+        data.configuration         # the dictionary of the local config-choices files
+        data.configuration_options # the dictionary of all possible options
     
     Example Yaml File:
         (project):

@@ -1,13 +1,3 @@
-# What is this?
-
-A nice way to integrate a generic config file into the rest of your project
-
-# How do I use this?
-
-`pip install quik-config`
-
-Create a config file like `info.yaml` with a structure like this:
-```yaml
 # NOTE: names in parentheses are special
 # all other names are not special
 (project):
@@ -30,9 +20,6 @@ Create a config file like `info.yaml` with a structure like this:
             constants:
                 pi: 3 # its 'bout 3 
         
-        DEV:
-            mode: development
-        
         PROD:
             mode: production
             has_gpu: true
@@ -42,18 +29,3 @@ Create a config file like `info.yaml` with a structure like this:
         
         GPU:
             has_gpu: true
-        
-```
-
-
-```python
-from quik_config import find_and_load
-
-# NOTE: intentionally changes directories to be in the same folder as the config
-config = find_and_load("info.yaml", default_options=["DEV"]).config # will keep going up a directories looking for the file
-print(f'''config.has_gpu = {config.has_gpu}''')
-print(f'''config.constants.pi = {config.constants.pi}''')
-
-# same as above but will not change your directory
-config = find_and_load("info.yaml", default_options=["DEV"], go_to_root=False,).config
-```

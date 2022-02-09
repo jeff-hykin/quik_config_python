@@ -1,18 +1,23 @@
 [tool.poetry]
-name = "your_package_name"
+name = "quik_config"
 version = "0.0.1"
-description = "YOUR_DESCRIPTION"
+description = "Project config files"
 authors=[]
 
 [tool.extra]
-author='YOUR_NAME_14057'
-author_email='YOUR_EMAIL'
-url='YOUR_GIT_REPO_URL'
+author='Jeff Hykin'
+author_email='jeff.hykin@gmail.com'
+url='https://github.com/jeff-hykin/quik_config_python.git'
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.12"
 pip = "20.1.1"
+dict-recursive-update = "1.0.1"
+super-map = "^1.1.1"
+walk-up = "^0.1.0"
+ez-yaml = "^1.1.0"
+toml = "^0.10.2"
 
 [tool.poetry.dev-dependencies]
 twine = "3.4.1"

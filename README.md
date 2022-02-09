@@ -13,7 +13,7 @@ Create a config file like `info.yaml` with a structure like this:
 (project):
     # paths the code will probably need to use
     (path_to):
-        config_file: "./"
+        project_root: "./"
     
     # this is your local-machine config choices
     # (should point to a file that is git-ignored)

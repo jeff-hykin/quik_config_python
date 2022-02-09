@@ -7,32 +7,42 @@ import ez_yaml
 
 def find_and_load(file_name, *, default_options=[], go_to_root=True):
     """
-    (project):
-        (path_to):
-            config_file: "./"
-        
-        # this is your local-machine config choices
-        # (should point to a file that is git-ignored)
-        # (file will be auto-generated with the correct format)
-        (configuration): ./configuration.ignore.yaml
-        
-        # all possible options that the config file can choose
-        (configuration_options):
-            (default):
-                mode: development
-                has_gpu: false
+    Example Python:
+        obj = find_and_load("info.yaml", default_options=["DEV"], go_to_root=True)
+    
+    Returns:
+        obj.config # the resulting dictionary for all the selected options
+        obj.info                  # the dictionary to the whole file (info.yaml)
+        obj.project               # the dictionary to everything inside (project)
+        obj.root_path             # parent folder of the .yaml file
+        obj.path_to               # a dictionary of paths relative to the root_path
+        obj.absolute_path_to      # same dictionary of paths, but made absolute
+        obj.configuration         # the dictionary of the local config-choices files
+        obj.configuration_options # the dictionary of all possible options
+    
+    Example Yaml File:
+        (project):
+            # paths the code will probably need to use
+            (path_to):
+                project_root: "./"
             
-            PROD:
-                mode: production
-                has_gpu: true
+            # this is your local-machine config choices
+            # (should point to a file that is git-ignored)
+            # (this file will be auto-generated with the correct format)
+            (configuration): ./configuration.ignore.yaml
             
-            TEST:
-                mode: testing
-            
-            GPU:
-                has_gpu: true
-            
+            # below are options that the config file can choose
+            #     when multiple options are selected
+            #     their keys/values will be merged recursively
+            (configuration_options):
+                (default):
+                    mode: development
+                    constants:
+                        pi: 3 # pi is 'bout 3 
+                OPTION1:
+                    mode: blah blah blah
     """
+    
     path = walk_up_until(file_name)
     root_path = FS.dirname(path)
     if go_to_root: os.chdir(root_path)

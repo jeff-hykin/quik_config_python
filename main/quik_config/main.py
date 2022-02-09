@@ -5,7 +5,7 @@ from walk_up import walk_up_until
 from dict_recursive_update import recursive_update
 import ez_yaml
 
-def find_and_load(file_name, default_options=[], go_to_root=True):
+def find_and_load(file_name, *, default_options=[], go_to_root=True):
     """
     (project):
         (path_to):

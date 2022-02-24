@@ -11,4 +11,17 @@ config = find_and_load("main/info.yaml", cd_to_filepath=False).config
 # get the info object
 info = find_and_load("info.yaml", default_options=["DEV"], cd_to_filepath=True)
 
+(
+    config,
+    path_to,
+    absolute_path_to,
+    project,
+    root_path,
+    configuration_choices,
+    configuration_options,
+    as_dict,
+) = find_and_load("info.yaml", default_options=["DEV"])
+
 print(f'''info = {info.config}''')
+print(f'''config = {config}''')
+print(f'''as_dict = {as_dict}''')

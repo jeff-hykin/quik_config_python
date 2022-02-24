@@ -68,4 +68,15 @@ info.configuration_choices # the dictionary of the local config-choices files
 info.configuration_options # the dictionary of all possible options
 info.as_dict               # the dictionary to the whole file (info.yaml)
 
+# alternative way to unpack all arguments
+(
+    config,
+    path_to,
+    absolute_path_to,
+    project,
+    root_path,
+    configuration_choices,
+    configuration_options,
+    as_dict,
+) = find_and_load("info.yaml", default_options=["DEV"])
 ```

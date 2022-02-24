@@ -11,4 +11,4 @@ config = find_and_load("main/info.yaml", cd_to_filepath=False).config
 # get the info object
 info = find_and_load("info.yaml", default_options=["DEV"], cd_to_filepath=True)
 
-print(f'''info = {info}''')
+print(f'''info = {info.config}''')

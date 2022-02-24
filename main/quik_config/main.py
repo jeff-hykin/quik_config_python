@@ -5,20 +5,23 @@ from walk_up import walk_up_until
 from dict_recursive_update import recursive_update
 import ez_yaml
 
-def find_and_load(file_name, *, default_options=[], go_to_root=True):
+def find_and_load(file_name, *, default_options=[], cd_to_filepath=True):
     """
     Example Python:
-        data = find_and_load("info.yaml", default_options=["DEV"], go_to_root=True)
+        # basic call
+        config, path_to, *_ = find_and_load("info.yaml", default_options=["DEV"])
+        # full call
+        info = find_and_load("info.yaml", default_options=["DEV"], cd_to_filepath=True)
     
     Returns:
-        data.config # the resulting dictionary for all the selected options
-        data.info                  # the dictionary to the whole file (info.yaml)
-        data.project               # the dictionary to everything inside (project)
-        data.root_path             # parent folder of the .yaml file
-        data.path_to               # a dictionary of paths relative to the root_path
-        data.absolute_path_to      # same dictionary of paths, but made absolute
-        data.configuration         # the dictionary of the local config-choices files
-        data.configuration_options # the dictionary of all possible options
+        info.config         # the resulting dictionary for all the selected options
+        info.path_to               # a dictionary of paths relative to the root_path
+        info.absolute_path_to      # same dictionary of paths, but made absolute
+        info.project               # the dictionary to everything inside (project)
+        info.root_path             # parent folder of the .yaml file
+        info.configuration_choices # the dictionary of the local config-choices files
+        info.configuration_options # the dictionary of all possible options
+        info.as_dict               # the dictionary to the whole file (info.yaml)
     
     Example Yaml File:
         (project):
@@ -45,7 +48,7 @@ def find_and_load(file_name, *, default_options=[], go_to_root=True):
     
     path = walk_up_until(file_name)
     root_path = FS.dirname(path)
-    if go_to_root: os.chdir(root_path)
+    if cd_to_filepath: os.chdir(root_path)
     # 
     # load the yaml
     # 
@@ -129,16 +132,20 @@ def find_and_load(file_name, *, default_options=[], go_to_root=True):
     # create a helper for recursive converting to lazy dict (much more useful than a regular dict)
     recursive_lazy_dict = lambda arg: arg if not isinstance(arg, dict) else LazyDict({ key: recursive_lazy_dict(value) for key, value in arg.items() })
     
-    return recursive_lazy_dict(dict(
+    # convert everything recursively
+    dict_output = recursive_lazy_dict(dict(
         config=config,
-        info=info,
-        project=project,
-        root_path=root_path,
         path_to=path_to,
         absolute_path_to=absolute_path_to,
-        configuration=configuration,
+        project=project,
+        root_path=root_path,
+        configuration_choices=configuration,
         configuration_options=configuration_options,
+        as_dict=info,
     ))
+    # convert to named tuple for easier argument unpacking
+    Info = namedtuple('Info', " ".join(list(dict_output.keys())))
+    return Info(**dict_output)
 
 import sys
 import os

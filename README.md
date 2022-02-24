@@ -55,5 +55,5 @@ print(f'''config.has_gpu = {config.has_gpu}''')
 print(f'''config.constants.pi = {config.constants.pi}''')
 
 # same as above but will not change your directory
-config = find_and_load("info.yaml", default_options=["DEV"], go_to_root=False,).config
+config = find_and_load("info.yaml", default_options=["DEV"], cd_to_filepath=False,).config
 ```

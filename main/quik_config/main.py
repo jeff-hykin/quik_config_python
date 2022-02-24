@@ -47,6 +47,8 @@ def find_and_load(file_name, *, default_options=[], cd_to_filepath=True):
     """
     
     path = walk_up_until(file_name)
+    if path == None:
+        raise Exception(f'''\n\nThis is an error while trying to load your configuration file\nI started inside this folder: {os.getcwd()}\nthen I looked for this file:{file_name}\nI checked all the parent folders too and I was unable to find that file.\n\nToDo: Please create that file or possibly run your command from a different directory''')
     root_path = FS.dirname(path)
     if cd_to_filepath: os.chdir(root_path)
     # 

@@ -56,4 +56,16 @@ print(f'''config.constants.pi = {config.constants.pi}''')
 
 # same as above but will not change your directory
 config = find_and_load("info.yaml", default_options=["DEV"], cd_to_filepath=False,).config
+
+# returns more than just config
+info = find_and_load("info.yaml", default_options=["DEV"])
+info.config         # the resulting dictionary for all the selected options
+info.path_to               # a dictionary of paths relative to the root_path
+info.absolute_path_to      # same dictionary of paths, but made absolute
+info.project               # the dictionary to everything inside (project)
+info.root_path             # parent folder of the .yaml file
+info.configuration_choices # the dictionary of the local config-choices files
+info.configuration_options # the dictionary of all possible options
+info.as_dict               # the dictionary to the whole file (info.yaml)
+
 ```

@@ -3,7 +3,7 @@
 (project):
     # paths the code will probably need to use
     (path_to):
-        config_file: "./"
+        this_file: "./info.yaml"
     
     # this is your local-machine config choices
     # (should point to a file that is git-ignored)

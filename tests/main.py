@@ -24,4 +24,5 @@ info = find_and_load("info.yaml", default_options=["DEV"], cd_to_filepath=True)
 
 print(f'''info = {info.config}''')
 print(f'''config = {config}''')
-print(f'''as_dict = {as_dict}''')
+print(f'''path_to = {path_to}''')
+print(f'''absolute_path_to = {absolute_path_to}''')

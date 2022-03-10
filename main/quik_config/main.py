@@ -100,6 +100,7 @@ def find_and_load(file_name, *, default_options=[], cd_to_filepath=True):
     configuration = None
     local_options = None
     local_options_path = project.get("(configuration)", None)
+    configuration_options = project.get("(configuration_options)", {})
     if local_options_path:
         try:
             configuration = ez_yaml.to_object(file_path=local_options_path)
@@ -107,6 +108,26 @@ def find_and_load(file_name, *, default_options=[], cd_to_filepath=True):
         except Exception as error:
             pass
     # create the default options file if it doesnt exist, but path does
+    for each_option in default_options:
+        if each_option not in configuration_options:
+            raise Exception(f"""
+            
+                ---------------------------------------------------------------------------------
+                When calling: find_and_load("{path}", default_options= *a list* )
+                `default_options` contained this option: {each_option}
+                
+                However, your info file: {path}
+                only has these options: {list(configuration_options.keys())}
+                Inside that file, look for "(project)" -> "(configuration_options)" -> *option*,
+                
+                LIKELY SOLUTION:
+                    Remove {each_option} from the `default_options` in your python file
+                
+                ALTERNATIVE SOLUTIONS:
+                    - Fix a misspelling of the option
+                    - Add {each_option} to "(configuration_options)" in {path}
+                ---------------------------------------------------------------------------------
+            """.replace("\n                ", "\n"))
     if local_options is None:
         if isinstance(local_options_path, str):
             FS.create_folder(FS.dirname(local_options_path))
@@ -116,7 +137,6 @@ def find_and_load(file_name, *, default_options=[], cd_to_filepath=True):
             )
         local_options = list(default_options)
         configuration = { "(selected_options)" : local_options }
-    configuration_options = project.get("(configuration_options)", {})
     config = configuration_options.get("(default)", {})
     # merge in all the other options
     for each_option in reversed(local_options):
@@ -125,10 +145,19 @@ def find_and_load(file_name, *, default_options=[], cd_to_filepath=True):
         except KeyError as error:
             raise Exception(f"""
             
-                Tried to load the "{each_option}" from (project) (configuration_options) inside "{path}"
-                This option was from your options list: {local_options}
-                But that option doesn't seem to exist in the (configuration_options)
-                The available options are: {list(configuration_options.keys())}
+                ---------------------------------------------------------------------------------
+                Your local config choices in this file: {local_options_path}
+                selected these options: {local_options}
+                (and there's a problem with this one: {each_option})
+                
+                Your info file: {path}
+                only lists these options available: {list(configuration_options.keys())}
+                Look for "(project)" -> "(configuration_options)" -> *option*,to see them
+                
+                LIKELY SOLUTION:
+                    Edit your local config: {local_options_path}
+                    And remove "- {each_option}"
+                ---------------------------------------------------------------------------------
                 
             """.replace("\n                ", "\n"))
     

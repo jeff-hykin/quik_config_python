@@ -24,8 +24,8 @@
             mode: production
             has_gpu: true
         
-        TEST:
-            mode: testing
+        DEV:
+            mode: development
         
         GPU:
             has_gpu: true

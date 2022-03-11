@@ -15,11 +15,7 @@ info = find_and_load("info.yaml", defaults_for_local_data=["DEV"], cd_to_filepat
     config,
     path_to,
     absolute_path_to,
-    project,
-    root_path,
-    configuration_choices,
-    configuration_options,
-    as_dict,
+    *_
 ) = find_and_load("info.yaml", defaults_for_local_data=["DEV"])
 
 print(f'''info = {info.config}''')

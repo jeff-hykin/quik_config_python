@@ -21,14 +21,14 @@ Create a config file like `info.yaml` with a structure like this:
         blahblah_folder: "./data/"
     
     # git-ignore this file path! (file will be generated automatically)
-    (local_data): ./configuration.ignore.yaml
+    (local_data): ./local_data.ignore.yaml
             # this^ is where you choose which profile(s)
             # and is where to store auth tokens and other secrets
     
     (profiles):
         (default):
             blah: "blah blah blah"
-            mode: development # or production same thing really
+            mode: development # or production. Same thing really
             has_gpu: maybe
             constants:
                 pi: 3 # its 'bout 3 
@@ -68,8 +68,8 @@ info = find_and_load(
     parse_args=True,
     defaults_for_local_data=["PROFILE1", "PROD"],
 )
-# (generates the ./configuration.ignore.yaml if you dont have it)
-# loads whatever profiles are mentioned in ./configuration.ignore.yaml 
+# (generates the ./local_data.ignore.yaml if you dont have it)
+# loads whatever profiles are mentioned in ./local_data.ignore.yaml 
 
 # Use the data!
 print(info.config)
@@ -97,7 +97,7 @@ Lets say you've got an info.yaml like this:
     bug_report_url: https://stackoverflow.com/questions/
     
     
-    (local_data): ./configuration.ignore.yaml
+    (local_data): ./local_data.ignore.yaml
     (profiles):
         DEV:
             cores: 1
@@ -117,7 +117,7 @@ Lets say you've got an info.yaml like this:
             cores: 32
 ```
 
-On your Macbook you can edit the `./configuration.ignore.yaml` (or your equivlent) to include something like the following:
+On your Macbook you can edit the `./local_data.ignore.yaml` (or your equivlent) to include something like the following:
 ```yaml
 (selected_profiles):
     - LAPTOP # the cores:2 is used (instead of cores:1 from DEV)

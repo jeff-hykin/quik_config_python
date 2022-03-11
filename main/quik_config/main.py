@@ -20,14 +20,16 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
         
         Returns:
             info.config         # the resulting dictionary for all the selected options
-            info.path_to               # a dictionary of paths relative to the root_path
-            info.absolute_path_to      # same dictionary of paths, but made absolute
-            info.project               # the dictionary to everything inside (project)
-            info.root_path             # parent folder of the .yaml file
-            info.configuration_choices # the dictionary of the local config-choices files
-            info.configuration_options # the dictionary of all possible options
-            info.as_dict               # the dictionary to the whole file (info.yaml)
-            info.unused_args           # all args before a '--' argument
+            info.path_to            # a dictionary of paths relative to the root_path
+            info.absolute_path_to   # same dictionary of paths, but made absolute
+            info.unused_args        # all args before a '--' argument
+            info.secrets            # (secrets) from the local data file
+            info.profile_names      # the dictionary of all possible options
+            info.selected_profiles  # the dictionary of the local config-choices files
+            info.root_path          # parent folder of the .yaml file
+            info.project            # the dictionary to everything inside (project)
+            info.local_data         # the local_data file as a dictionary
+            info.as_dict            # the dictionary to the whole file (info.yaml)
         
         Example Yaml File:
             (project):
@@ -38,7 +40,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                 # this is your local-machine config choices
                 # (should point to a file that is git-ignored)
                 # (this file will be auto-generated with the correct format)
-                (local_data): ./configuration.ignore.yaml
+                (local_data): ./local_data.ignore.yaml
                 
                 # below are options that the config file can choose
                 #     when multiple options are selected
@@ -63,7 +65,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
     if True:
         path = walk_up_until(file_name)
         if path == None:
-            raise Exception(f'''\n\nThis is an error while trying to load your configuration file\nI started inside this folder: {os.getcwd()}\nthen I looked for this file: {file_name}\nI checked all the parent folders too and I was unable to find that file.\n\nToDo: Please create that file or possibly run your command from a different directory''')
+            raise Exception(f'''\n\nThis is an error while trying to load your local_data file\nI started inside this folder: {os.getcwd()}\nthen I looked for this file: {file_name}\nI checked all the parent folders too and I was unable to find that file.\n\nToDo: Please create that file or possibly run your command from a different directory''')
         root_path = FS.dirname(path)
         if cd_to_filepath: os.chdir(root_path)
         info = ez_yaml.to_object(file_path=path, load_nested_yaml=True)
@@ -103,23 +105,25 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
     
     # 
     # 
-    # find selected configuration options
+    # find selected local_data profiles
     # 
     # 
     if True:
-        configuration = None
-        local_options = None
-        local_options_path = project.get("(local_data)", None)
-        configuration_options = project.get("(profiles)", {})
-        if local_options_path:
+        local_data        = None
+        selected_profiles = None
+        local_secrets     = {"example": "key29i5805"}
+        local_data_path   = project.get("(local_data)", None)
+        profile_names     = project.get("(profiles)", {})
+        if local_data_path:
             try:
-                configuration = ez_yaml.to_object(file_path=local_options_path)
-                local_options = configuration.get("(selected_profiles)", [])
+                local_data = ez_yaml.to_object(file_path=local_data_path)
+                selected_profiles = local_data.get("(selected_profiles)", [])
+                local_secrets     = local_data.get("(secrets)"          , {})
             except Exception as error:
                 pass
         # create the default options file if it doesnt exist, but path does
         for each_option in defaults_for_local_data:
-            if each_option not in configuration_options:
+            if each_option not in profile_names:
                 raise Exception(f"""
                 
                     ---------------------------------------------------------------------------------
@@ -127,7 +131,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                     `defaults_for_local_data` contained this option: {each_option}
                     
                     However, your info file: {path}
-                    only has these options: {list(configuration_options.keys())}
+                    only has these options: {list(profile_names.keys())}
                     Inside that file, look for "(project)" -> "(profiles)" -> *option*,
                     
                     LIKELY SOLUTION:
@@ -138,37 +142,43 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                         - Add {each_option} to "(profiles)" in {path}
                     ---------------------------------------------------------------------------------
                 """.replace("\n                ", "\n"))
-        if local_options is None:
-            if isinstance(local_options_path, str):
-                FS.create_folder(FS.dirname(local_options_path))
+        if selected_profiles is None:
+            if not isinstance(local_data_path, str):
+                selected_profiles = []
+                local_secrets = {}
+            else:
+                FS.create_folder(FS.dirname(local_data_path))
                 ez_yaml.to_file(
-                    file_path=local_options_path,
-                    obj={ "(selected_profiles)": defaults_for_local_data },
+                    file_path=local_data_path,
+                    obj={
+                        "(selected_profiles)": defaults_for_local_data,
+                        "(secrets)": local_secrets,
+                    },
                 )
-            local_options = list(defaults_for_local_data)
-            configuration = { "(selected_profiles)" : local_options }
-        config = configuration_options.get("(default)", {})
+                selected_profiles = list(defaults_for_local_data)
+                local_data = { "(selected_profiles)" : selected_profiles }
+        config = profile_names.get("(default)", {})
     
     # 
     # merge in all the options data
     # 
-    for each_option in reversed(local_options):
+    for each_option in reversed(selected_profiles):
         try:
-            config = recursive_update(config, configuration_options[each_option])
+            config = recursive_update(config, profile_names[each_option])
         except KeyError as error:
             raise Exception(f"""
             
                 ---------------------------------------------------------------------------------
-                Your local config choices in this file: {local_options_path}
-                selected these options: {local_options}
+                Your local config choices in this file: {local_data_path}
+                selected these options: {selected_profiles}
                 (and there's a problem with this one: {each_option})
                 
                 Your info file: {path}
-                only lists these options available: {list(configuration_options.keys())}
+                only lists these options available: {list(profile_names.keys())}
                 Look for "(project)" -> "(profiles)" -> *option*,to see them
                 
                 LIKELY SOLUTION:
-                    Edit your local config: {local_options_path}
+                    Edit your local config: {local_data_path}
                     And remove "- {each_option}"
                 ---------------------------------------------------------------------------------
                 
@@ -256,12 +266,14 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
         config=config,
         path_to=path_to,
         absolute_path_to=absolute_path_to,
-        project=project,
-        root_path=root_path,
-        configuration_choices=configuration,
-        configuration_options=configuration_options,
-        as_dict=info,
         unused_args=unused_args,
+        secrets=local_secrets,
+        profile_names=profile_names,
+        selected_profiles=selected_profiles,
+        root_path=root_path,
+        project=project,
+        local_data=local_data,
+        as_dict=info,
     ))
     # convert to named tuple for easier argument unpacking
     Info = namedtuple('Info', " ".join(list(dict_output.keys())))

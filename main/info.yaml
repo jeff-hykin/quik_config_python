@@ -8,7 +8,7 @@
     # this is your local-machine config choices
     # (should point to a file that is git-ignored)
     # (this file will be auto-generated with the correct format)
-    (local_data): ./configuration.ignore.yaml
+    (local_data): ./local_data.ignore.yaml
     
     # below are options that the config file can choose
     #     when multiple options are selected

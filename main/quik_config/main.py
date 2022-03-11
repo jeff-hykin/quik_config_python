@@ -8,13 +8,13 @@ import ez_yaml
 import ruamel.yaml
 import regex as re
 
-def find_and_load(file_name, *, parse_args=False, args=None, default_options=[], cd_to_filepath=True):
+def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True):
     """
         Example Python:
             # basic call
-            config, path_to, *_ = find_and_load("info.yaml", default_options=["DEV"])
+            config, path_to, *_ = find_and_load("info.yaml", defaults_for_local_data=["DEV"])
             # full call
-            info = find_and_load("info.yaml", default_options=["DEV"], cd_to_filepath=True)
+            info = find_and_load("info.yaml", defaults_for_local_data=["DEV"], cd_to_filepath=True)
             # parse args from sys.argv (everything after "--")
             info = find_and_load("info.yaml", parse_args=True)
         
@@ -38,12 +38,12 @@ def find_and_load(file_name, *, parse_args=False, args=None, default_options=[],
                 # this is your local-machine config choices
                 # (should point to a file that is git-ignored)
                 # (this file will be auto-generated with the correct format)
-                (configuration): ./configuration.ignore.yaml
+                (local_data): ./configuration.ignore.yaml
                 
                 # below are options that the config file can choose
                 #     when multiple options are selected
                 #     their keys/values will be merged recursively
-                (configuration_options):
+                (profiles):
                     (default):
                         mode: development
                         constants:
@@ -109,33 +109,33 @@ def find_and_load(file_name, *, parse_args=False, args=None, default_options=[],
     if True:
         configuration = None
         local_options = None
-        local_options_path = project.get("(configuration)", None)
-        configuration_options = project.get("(configuration_options)", {})
+        local_options_path = project.get("(local_data)", None)
+        configuration_options = project.get("(profiles)", {})
         if local_options_path:
             try:
                 configuration = ez_yaml.to_object(file_path=local_options_path)
-                local_options = configuration.get("(selected_options)", [])
+                local_options = configuration.get("(selected_profiles)", [])
             except Exception as error:
                 pass
         # create the default options file if it doesnt exist, but path does
-        for each_option in default_options:
+        for each_option in defaults_for_local_data:
             if each_option not in configuration_options:
                 raise Exception(f"""
                 
                     ---------------------------------------------------------------------------------
-                    When calling: find_and_load("{path}", default_options= *a list* )
-                    `default_options` contained this option: {each_option}
+                    When calling: find_and_load("{path}", defaults_for_local_data= *a list* )
+                    `defaults_for_local_data` contained this option: {each_option}
                     
                     However, your info file: {path}
                     only has these options: {list(configuration_options.keys())}
-                    Inside that file, look for "(project)" -> "(configuration_options)" -> *option*,
+                    Inside that file, look for "(project)" -> "(profiles)" -> *option*,
                     
                     LIKELY SOLUTION:
-                        Remove {each_option} from the `default_options` in your python file
+                        Remove {each_option} from the `defaults_for_local_data` in your python file
                     
                     ALTERNATIVE SOLUTIONS:
                         - Fix a misspelling of the option
-                        - Add {each_option} to "(configuration_options)" in {path}
+                        - Add {each_option} to "(profiles)" in {path}
                     ---------------------------------------------------------------------------------
                 """.replace("\n                ", "\n"))
         if local_options is None:
@@ -143,10 +143,10 @@ def find_and_load(file_name, *, parse_args=False, args=None, default_options=[],
                 FS.create_folder(FS.dirname(local_options_path))
                 ez_yaml.to_file(
                     file_path=local_options_path,
-                    obj={ "(selected_options)": default_options },
+                    obj={ "(selected_profiles)": defaults_for_local_data },
                 )
-            local_options = list(default_options)
-            configuration = { "(selected_options)" : local_options }
+            local_options = list(defaults_for_local_data)
+            configuration = { "(selected_profiles)" : local_options }
         config = configuration_options.get("(default)", {})
     
     # 
@@ -165,7 +165,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, default_options=[],
                 
                 Your info file: {path}
                 only lists these options available: {list(configuration_options.keys())}
-                Look for "(project)" -> "(configuration_options)" -> *option*,to see them
+                Look for "(project)" -> "(profiles)" -> *option*,to see them
                 
                 LIKELY SOLUTION:
                     Edit your local config: {local_options_path}
@@ -177,6 +177,9 @@ def find_and_load(file_name, *, parse_args=False, args=None, default_options=[],
     # 
     # parse cli arguments
     #
+    # TODO:
+    #     --profiles=THING,PROD
+    #     --help
     if True: 
         if parse_args and args is None:
             import sys
@@ -223,7 +226,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, default_options=[],
                 raise Exception(f"""
                 
                     ---------------------------------------------------------------------------------
-                    When calling: find_and_load("{path}", default_options= *a list* )
+                    When calling: find_and_load("{path}", defaults_for_local_data= *a list* )
                     
                     I was given these arguments: {args_copy}
                     When looking at this argument: {each_original}

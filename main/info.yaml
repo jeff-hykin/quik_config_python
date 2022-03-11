@@ -8,12 +8,12 @@
     # this is your local-machine config choices
     # (should point to a file that is git-ignored)
     # (this file will be auto-generated with the correct format)
-    (configuration): ./configuration.ignore.yaml
+    (local_data): ./configuration.ignore.yaml
     
     # below are options that the config file can choose
     #     when multiple options are selected
     #     their keys/values will be merged recursively
-    (configuration_options):
+    (profiles):
         (default):
             mode: development
             has_gpu: false

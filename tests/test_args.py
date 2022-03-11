@@ -13,8 +13,9 @@ print(f'''sys.argv = {sys.argv}''')
     configuration_options,
     as_dict,
     unused_args,
-) = find_and_load("main/info.yaml", parse_args=True, default_options=["DEV"], cd_to_filepath=True)
+) = find_and_load("main/info.yaml", parse_args=True, defaults_for_local_data=["DEV"], cd_to_filepath=True)
 
+print(f'''unused_args = {unused_args}''')
 print(f'''config = {config}''')
 print(f'''path_to = {path_to}''')
 print(f'''absolute_path_to = {absolute_path_to}''')

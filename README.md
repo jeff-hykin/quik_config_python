@@ -1,6 +1,6 @@
 # What is this?
 
-The most flexible file+cli config for python projects
+The most flexible file + cli config for python projects
 - stop hardcoding filepaths
 - stop wasing time using `argparse`
 - stop with messy config differences for different machines

@@ -120,7 +120,7 @@ Lets say you've got an info.yaml like this:
 On your Macbook you can edit the `./local_data.ignore.yaml` (or your equivlent) to include something like the following:
 ```yaml
 (selected_profiles):
-    - LAPTOP # the cores:2 is used (instead of cores:1 from DEV)
+    - LAPTOP # the cores:2 will be used (instead of cores:1 from DEV)
     - UNIX   #     because LAPTOP is higher in the list than DEV
     - DEV
 ```

@@ -23,6 +23,8 @@
         PROD:
             mode: production
             has_gpu: true
+            constants:
+                pi: 3.14159265358979
         
         DEV:
             mode: development

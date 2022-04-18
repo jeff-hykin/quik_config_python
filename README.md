@@ -152,15 +152,16 @@ print("unused_args:", info.unused_args)
 #run(*info.unused_args)
 ```
 
-### Example 1
+### Example 0
 
-Then run this in the command line:
+Using the python file and config file above
 
 ```shell
 python ./run.py
 ```
 
-Lets say these are the default config values:
+Running that will output:
+
 ```
 config: {
     "mode": "development",
@@ -172,15 +173,59 @@ config: {
 unused_args: []
 ```
 
+### Example 1
+
+Show help. This output can be overridden in the info.yaml by setting `(help):` under the `(project):` key.
+
+```shell
+python ./run.py -- --help
+```
+
+Note the `--` is needed in front of the help.
+
+You can also add `show_help_for_no_args=True` if you want that behavior. <br>
+Ex:
+
+```python
+from quik_config import find_and_load
+info = find_and_load(
+    "info.yaml",
+    show_help_for_no_args=True
+    parse_args=True,
+)
+```
+
 ### Example 2
 
-Again but with arguments:
+Again but selecting some profiles
+
+```shell
+python ./run.py arg1 -- --profiles='[PROD]'
+# or
+python ./run.py arg1 -- @PROD'
+```
+
+Output:
+
+```
+config: {
+    "mode": "production",
+    "has_gpu": False,
+    "constants": {
+        "pi": 3.1415926536,
+        "problems": True,
+    },
+}
+unused_args: ["arg1"]
+```
+
+### Example 3
+
+Again but with custom arguments:
 
 ```shell
 python ./run.py arg1 --  mode:my_custom_mode  constants:tau:6.2831853072
 ```
-
-It only looks at args after the `--`. So it looks like:
 
 ```
 config: {
@@ -194,10 +239,10 @@ config: {
 unused_args: ["arg1"]
 ```
 
-### Example 3
+### Example 4
 
 Again but with really complicated arguments: <br>
-(each argument is parsed as yaml!)
+(each argument is parsed as yaml)
 
 ```shell
 python ./run.py arg1 --  mode:my_custom_mode  'constants: { tau: 6.2831853072, pi: 3.1415926, reserved_letters: [ "C", "K", "i" ] }'

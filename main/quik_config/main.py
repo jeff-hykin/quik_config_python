@@ -7,8 +7,9 @@ from dict_recursive_update import recursive_update
 import ez_yaml
 import ruamel.yaml
 import regex as re
+import json
 
-def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True):
+def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True, show_help_for_no_args=False):
     """
         Example Python:
             # basic call
@@ -24,7 +25,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
             info.absolute_path_to   # same dictionary of paths, but made absolute
             info.unused_args        # all args before a '--' argument
             info.secrets            # (secrets) from the local data file
-            info.profile_names      # the dictionary of all possible options
+            info.available_profiles      # the dictionary of all possible options
             info.selected_profiles  # the dictionary of the local config-choices files
             info.root_path          # parent folder of the .yaml file
             info.project            # the dictionary to everything inside (project)
@@ -109,11 +110,12 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
     # 
     # 
     if True:
-        local_data        = None
-        selected_profiles = None
-        local_secrets     = {"example": "key29i5805"}
-        local_data_path   = project.get("(local_data)", None)
-        profile_names     = project.get("(profiles)", {})
+        local_data         = None
+        selected_profiles  = None
+        local_secrets      = {"example": "key29i5805"}
+        local_data_path    = project.get("(local_data)", None)
+        available_profiles = project.get("(profiles)", {})
+        help_structure     = project.get("(help)", None)
         if local_data_path:
             try:
                 local_data = ez_yaml.to_object(file_path=local_data_path)
@@ -123,7 +125,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                 pass
         # create the default options file if it doesnt exist, but path does
         for each_option in defaults_for_local_data:
-            if each_option not in profile_names:
+            if each_option not in available_profiles:
                 raise Exception(f"""
                 
                     ---------------------------------------------------------------------------------
@@ -131,7 +133,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                     `defaults_for_local_data` contained this option: {each_option}
                     
                     However, your info file: {path}
-                    only has these options: {list(profile_names.keys())}
+                    only has these options: {list(available_profiles.keys())}
                     Inside that file, look for "(project)" -> "(profiles)" -> *option*,
                     
                     LIKELY SOLUTION:
@@ -157,39 +159,11 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                 )
                 selected_profiles = list(defaults_for_local_data)
                 local_data = { "(selected_profiles)" : selected_profiles }
-        config = profile_names.get("(default)", {})
+        config = available_profiles.get("(default)", {})
     
-    # 
-    # merge in all the options data
-    # 
-    for each_option in reversed(selected_profiles):
-        try:
-            config = recursive_update(config, profile_names[each_option])
-        except KeyError as error:
-            raise Exception(f"""
-            
-                ---------------------------------------------------------------------------------
-                Your local config choices in this file: {local_data_path}
-                selected these options: {selected_profiles}
-                (and there's a problem with this one: {each_option})
-                
-                Your info file: {path}
-                only lists these options available: {list(profile_names.keys())}
-                Look for "(project)" -> "(profiles)" -> *option*,to see them
-                
-                LIKELY SOLUTION:
-                    Edit your local config: {local_data_path}
-                    And remove "- {each_option}"
-                ---------------------------------------------------------------------------------
-                
-            """.replace("\n                ", "\n"))
-            
     # 
     # parse cli arguments
     #
-    # TODO:
-    #     --profiles=THING,PROD
-    #     --help
     if True: 
         if parse_args and args is None:
             import sys
@@ -199,26 +173,225 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
         if args is None:
             args = []
         
-        # remove up to the first "--" argument
+        # 
+        # remove up to the first "--" argument and only until the next "--" argument
+        # 
         unused_args = []
-        args_copy = list(args)
-        while len(args_copy) > 0:
-            if args_copy[0] == '--':
-                args_copy.pop(0)
+        remaining_args = list(args)
+        while len(remaining_args) > 0:
+            if remaining_args[0] == '--':
+                remaining_args.pop(0)
                 break
-            unused_args.append(args_copy.pop(0))
+            unused_args.append(remaining_args.pop(0))
+        resume_unused = False
+        second_half_unused = list(remaining_args)
+        new_remaining_args = []
+        for each in list(second_half_unused):
+            if each != "--":
+                new_remaining_args.append(each)
+                second_half_unused.pop(-1)
+            else:
+                break
+        unused_args += second_half_unused
+        remaining_args = list(new_remaining_args)
+        
+        
+        # 
+        # find --help
+        # 
+        args_after_help = []
+        has_help_arg = False
+        for each_arg in remaining_args:
+            if has_help_arg:
+                args_after_help.append(each_arg)
+            elif each_arg == "--help":
+                has_help_arg = True
+        if has_help_arg or (show_help_for_no_args and len(args) == 0):
+            top_level_options = "- "+("\n                    - ").join(list(config.keys()))
+            default_profiles  = "- "+("\n                    - ").join(list(selected_profiles))
+            quik_config_help = f"""
+                
+                ---------------------------------------------------------------------------------
+                QUIK CONFIG HELP
+                ---------------------------------------------------------------------------------
+                
+                open the file below and look for "(profiles)" for more information:
+                    {path}
+                
+                examples:
+                    python3 ./ur_file.py   --  --help --profiles
+                    python3 ./ur_file.py   --  --help key1
+                    python3 ./ur_file.py   --  --help key1:subKey
+                    python3 ./ur_file.py   --  --help key1:subKey key2
+                    python3 ./ur_file.py   --  --profiles='[YOUR_PROFILE, YOUR_OTHER_PROFILE]'
+                    python3 ./ur_file.py   --  thing1:"Im a new value"          part2:"10000"
+                    python3 ./ur_file.py   --  thing1:"I : cause errors"        part2:10000
+                    python3 ./ur_file.py   --  'thing1:"I : dont cause errors"  part2:10000
+                    python3 ./ur_file.py   --  'thing1:["Im in a list"]'
+                    python3 ./ur_file.py   --  'thing1:part_A:"Im nested"'
+                    python3 ./ur_file.py "I get sent to ./ur_file.py" --  part2:"new value"
+                    python3 ./ur_file.py "I get ignored" "me too"  --  part2:10000
+                
+                how it works:
+                    - the "--" is a required argument, quik config only looks after the --
+                    - given "thing1:10", "thing1" is the key, "10" is the value
+                    - All values are parsed as json/yaml
+                        - "true" is boolean true
+                        - "10" is a number
+                        - '"10"' is a string (JSON escaping)
+                        - '"10\\n"' is a string with a newline
+                        - '[10,11,hello]' is a list with two numbers and an unquoted string
+                        - '{'{"thing": 10}'}' is a map/object
+                        - "blah blah" is an un-quoted string with a space. Yes its valid YAML
+                        - multiline values are valid, you can dump an whole JSON doc as 1 arg
+                    - "thing1:10" overrides the "thing1" in the (profiles) of the info.yaml
+                    - "thing:subThing:10" is shorthand, 10 is the value, the others are keys
+                      it will only override the subThing (and will create it if necessary)
+                    - '{'{"thing": {"subThing":10} }'}' is long-hand for "thing:subThing:10"
+                    - '"thing:subThing":10' will currently not work for shorthand (parse error)
+                
+                options:
+                    --help
+                    --profiles
+                
+                ---------------------------------------------------------------------------------
+                
+                your default top-level keys:
+                    {top_level_options}
+                your local defaults file:
+                    {local_data_path}
+                your default profiles:
+                    {default_profiles}
+                
+                ---------------------------------------------------------------------------------
+            
+            """.replace("\n            ", "\n")
+            
+            # 
+            # check for user-provided help
+            # 
+            if len(args_after_help) > 0:
+                if args_after_help[0] == "--profiles":
+                    args_after_help.pop(0) # remove the "--profiles" arg
+                    
+                    # if that was the only arg
+                    if len(args_after_help) == 0:
+                        print("\navailable profiles:")
+                        for each in available_profiles:
+                            if each != '(default)':
+                                print(f"    - {each}")
+                        print("\nas cli argument:")
+                        for each in available_profiles:
+                            if each != '(default)':
+                                print(f"   -- --profiles='{json.dumps([each])}'")
+                    else:
+                        print("")
+                        print(f"here are the values for: {args_after_help}")
+                        for each_profile_name in args_after_help:
+                            print("")
+                            print(f"    {each_profile_name}:")
+                            if each_profile_name in available_profiles:
+                                print("        "+yaml_string_value(available_profiles[each_profile_name]).replace("\n","\n        "))
+                            else:
+                                print("        ! PROFILE NOT FOUND !")
+                else:
+                    for each_key_string in args_after_help:
+                        keys = each_key_string.split(":")
+                        found_keys = []
+                        item = config
+                        failed = False
+                        for key in keys:
+                            if key in item:
+                                found_keys.append(key)
+                                item = item[key]
+                            else:
+                                failed = True
+                                found_keys = ":".join(found_keys)
+                                found_keys = yaml_string_value(found_keys)
+                                item_string = yaml_string_value(item).replace("\n", "\n        ")
+                                print(f"    I found: {found_keys}\n    but I couldn't find: '{each_key_string}'\n\n    Value of {found_keys} was:\n        {item_string}")
+                        if not failed:
+                            found_keys = ":".join(found_keys)
+                            item_string = ez_yaml.to_string(obj=item).replace("\n", "\n    ")
+                            print(f"   {found_keys} has a default value of:\n    {item_string}")
+                # TODO: allow user help to specify help for specific keys
+            else:
+                if isinstance(help_structure, str):
+                    print(help_structure)
+                else:
+                    print(quik_config_help)
+            exit()
+        # 
+        # find the --profiles
+        # 
+        new_remaining_args = []
+        new_selected_profiles = []
+        had_profile_arg = False
+        prefix1 = "--profiles="
+        prefix2 = "@"
+        for each_arg in remaining_args:
+            starts_with_prefix1 = each_arg.startswith(prefix1)
+            starts_with_prefix2 = each_arg.startswith(prefix2)
+            if each_arg.startswith(prefix1):
+                prefix = prefix1
+                had_profile_arg = True
+                assignment = each_arg[len(prefix):]
+                try:
+                    obj = ez_yaml.to_object(string=assignment)
+                    if not isinstance(obj, list):
+                        raise Exception(f'''    Value was not a list''')
+                    new_selected_profiles += ez_yaml.to_object(string=assignment)
+                except Exception as error:
+                    raise Exception(f"""
+                    
+                        ---------------------------------------------------------------------------------
+                        When calling: find_and_load("{path}", defaults_for_local_data= *a list* )
+                        
+                        I was given some arguments: {remaining_args}
+                        When looking at this argument: {each_arg}
+                        (which was converted to: '''{assignment}''' )
+                        
+                        I tried to parse that as a yaml, and I expected it to be a list like:
+                        When parsing it though I got this error
+                        
+                        __error__
+                        {error}
+                        __error__
+                        
+                        
+                        LIKELY SOLUTION:
+                            Change the argument to be a valid yaml list
+                            ex:
+                                '{prefix}[howdy,howdy,howdy]'
+                            or
+                                {prefix}"[ 'howdy,howdy', 'howdy' ]"
+                            or
+                                {prefix}'[]'
+                        ---------------------------------------------------------------------------------
+                    """.replace("\n                    ", "\n"))
+            elif each_arg.startswith(prefix2):
+                prefix = prefix2
+                had_profile_arg = True
+                assignment = each_arg[len(prefix):]
+                new_selected_profiles += [assignment]
+            else:
+                new_remaining_args.append(each_arg)
+        remaining_args = new_remaining_args
+        if had_profile_arg:
+            selected_profiles = new_selected_profiles
         
         # allow for a little yaml shorthand
         # thing:thing2:value >>> thing: { thing2: value }
         config_args = []
-        for each in args_copy:
-            match = re.match(r"((?:[a-zA-Z0-9_][a-zA-Z0-9_-]*:)+)([\w\W]*)", each)
+        yaml_shorthand_regex = r"((?:[a-zA-Z0-9_][a-zA-Z0-9_-]*:)+)([\w\W]*)"
+        for each in remaining_args:
+            match = re.match(yaml_shorthand_regex, each)
             # if shorthand
             if match:
                 shorthand_part = match[1]
                 value_part = match[2]
                 shorthand_parts = shorthand_part.split(":")
-                shorthand_parts.pop() # remove the training empty string
+                shorthand_parts.pop() # remove the trailing empty string
                 new_begining = ": {".join(shorthand_parts) + ": "
                 new_end = "\n"+( "}" * (len(shorthand_parts)-1) )
                 config_args.append(new_begining + value_part + new_end)
@@ -226,7 +399,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                 config_args.append(each)
         
         config_data_from_cli = []
-        for each_original, each_converted in zip(args_copy, config_args):
+        for each_original, each_converted in zip(remaining_args, config_args):
             try:
                 value = ez_yaml.to_object(string=each_converted)
                 if not isinstance(value, dict):
@@ -238,7 +411,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                     ---------------------------------------------------------------------------------
                     When calling: find_and_load("{path}", defaults_for_local_data= *a list* )
                     
-                    I was given these arguments: {args_copy}
+                    I was given these arguments: {remaining_args}
                     When looking at this argument: {each_original}
                     (which was converted to: '''{each_converted}''' )
                     
@@ -259,6 +432,30 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
         for each_dict in config_data_from_cli:
             config = recursive_update(config, each_dict)
     
+    # 
+    # merge in all the options data
+    # 
+    for each_option in reversed(selected_profiles):
+        try:
+            config = recursive_update(config, available_profiles[each_option])
+        except KeyError as error:
+            raise Exception(f"""
+            
+                ---------------------------------------------------------------------------------
+                Your local config choices in this file: {local_data_path}
+                selected these options: {selected_profiles}
+                (and there's a problem with this one: {each_option})
+                
+                Your info file: {path}
+                only lists these options available: {list(available_profiles.keys())}
+                Look for "(project)" -> "(profiles)" -> *option*,to see them
+                
+                LIKELY SOLUTION:
+                    Edit your local config: {local_data_path}
+                    And remove "- {each_option}"
+                ---------------------------------------------------------------------------------
+                
+            """.replace("\n                ", "\n"))
     
     # convert everything recursively
     recursive_lazy_dict = lambda arg: arg if not isinstance(arg, dict) else LazyDict({ key: recursive_lazy_dict(value) for key, value in arg.items() })
@@ -268,7 +465,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
         absolute_path_to=absolute_path_to,
         unused_args=unused_args,
         secrets=local_secrets,
-        profile_names=profile_names,
+        available_profiles=available_profiles,
         selected_profiles=selected_profiles,
         root_path=root_path,
         project=project,
@@ -278,6 +475,10 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
     # convert to named tuple for easier argument unpacking
     Info = namedtuple('Info', " ".join(list(dict_output.keys())))
     return Info(**dict_output)
+
+def yaml_string_value(value):
+    # remove the "--%YAML 1.2" stuff and trailing newline
+    return ez_yaml.to_string(obj=value)[14:-1]
 
 import sys
 import os

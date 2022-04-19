@@ -116,6 +116,10 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
         local_data_path    = project.get("(local_data)", None)
         available_profiles = project.get("(profiles)", {})
         help_structure     = project.get("(help)", None)
+        
+        # handle the (inherit)
+        available_profiles = resolve_profiles(available_profiles)
+        
         if local_data_path:
             try:
                 local_data = ez_yaml.to_object(file_path=local_data_path)
@@ -480,6 +484,37 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
 def yaml_string_value(value):
     # remove the "--%YAML 1.2" stuff and trailing newline
     return ez_yaml.to_string(obj=value)[14:-1]
+
+def resolve_profiles(available_profiles):
+    resolved_profiles = {}
+    pending_inheriting_profiles = dict(available_profiles)
+    # TODO: detect circular inheritance
+    while len(pending_inheriting_profiles) > 0:
+        copy = dict(pending_inheriting_profiles)
+        for each_profile_name, each_profile in copy.items():
+            # check,move pending to
+            if "(inherit)" not in each_profile:
+                resolved_profiles[each_profile_name] = pending_inheriting_profiles[each_profile_name]
+                del pending_inheriting_profiles[each_profile_name]
+            else:
+                new_parents = []
+                for each_parent in each_profile["(inherit)"]:
+                    # parent is resolved
+                    if each_parent in resolved_profiles:
+                        parent_profile = resolved_profiles[each_parent]
+                        # 
+                        # perform the inheritance
+                        # 
+                        pending_inheriting_profiles[each_profile_name] = recursive_update(pending_inheriting_profiles[each_profile_name], parent_profile)
+                        continue
+                    # parent is not resolved (skip for now)
+                    else:
+                        new_parents.append(each_parent)
+                each_profile["(inherit)"] = new_parents
+                # remove key once all resolved
+                if len(new_parents) == 0:
+                    del each_profile["(inherit)"]
+    return resolved_profiles
 
 import sys
 import os

@@ -159,6 +159,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                 )
                 selected_profiles = list(defaults_for_local_data)
                 local_data = { "(selected_profiles)" : selected_profiles }
+        selected_profiles = reversed(selected_profiles) # this makes first===highest priority 
         config = available_profiles.get("(default)", {})
     
     # 
@@ -435,7 +436,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
     # 
     # merge in all the options data
     # 
-    for each_option in reversed(selected_profiles):
+    for each_option in selected_profiles:
         try:
             config = recursive_update(config, available_profiles[each_option])
         except KeyError as error:

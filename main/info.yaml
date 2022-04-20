@@ -21,6 +21,7 @@
                 pi: 3 # its 'bout 3 
         
         PROD:
+            (inherit): GPU
             mode: production
             has_gpu: true
             constants:

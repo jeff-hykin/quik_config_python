@@ -118,7 +118,7 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
         help_structure     = project.get("(help)", None)
         
         # handle the (inherit)
-        available_profiles = resolve_profiles(available_profiles)
+        available_profiles = resolve_profiles(available_profiles, path)
         
         if local_data_path:
             try:
@@ -485,7 +485,7 @@ def yaml_string_value(value):
     # remove the "--%YAML 1.2" stuff and trailing newline
     return ez_yaml.to_string(obj=value)[14:-1]
 
-def resolve_profiles(available_profiles):
+def resolve_profiles(available_profiles, path):
     resolved_profiles = {}
     pending_inheriting_profiles = dict(available_profiles)
     # TODO: detect circular inheritance
@@ -494,11 +494,18 @@ def resolve_profiles(available_profiles):
         for each_profile_name, each_profile in copy.items():
             # check,move pending to
             if "(inherit)" not in each_profile:
+                print(f'''inherit not in: {each_profile}''')
                 resolved_profiles[each_profile_name] = pending_inheriting_profiles[each_profile_name]
                 del pending_inheriting_profiles[each_profile_name]
             else:
+                print(f'''inherit in: {each_profile}''')
                 new_parents = []
+                if not isinstance(each_profile["(inherit)"], (list, tuple)):
+                    raise Exception(f'''\n\nin the '{path}' file,\nthe {each_profile_name} profile has an (inherit): key\nBut its not a list, and it needs to be a list of strings''')
                 for each_parent in each_profile["(inherit)"]:
+                    if each_parent not in available_profiles:
+                        if not isinstance(each_profile["(inherit)"], (list, tuple)):
+                            raise Exception(f'''\n\nin the '{path}' file,\nthe {each_profile_name} profile has an (inherit): key\nAnd one of the things its trying to inherit from is: {each_parent}\nThe problem is I don't see a {each_parent} profile.\n\nAvailable Profiles: {list(available_profiles.keys())}''')
                     # parent is resolved
                     if each_parent in resolved_profiles:
                         parent_profile = resolved_profiles[each_parent]
@@ -511,6 +518,7 @@ def resolve_profiles(available_profiles):
                     else:
                         new_parents.append(each_parent)
                 each_profile["(inherit)"] = new_parents
+                print(f'''    new_parents = {new_parents}''')
                 # remove key once all resolved
                 if len(new_parents) == 0:
                     del each_profile["(inherit)"]

@@ -385,6 +385,34 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
         if had_profile_arg:
             selected_profiles = new_selected_profiles
         
+        # 
+        # merge in all the profiles
+        # 
+        for each_option in selected_profiles:
+            try:
+                config = recursive_update(config, available_profiles[each_option])
+            except KeyError as error:
+                raise Exception(f"""
+                
+                    ---------------------------------------------------------------------------------
+                    Your local config choices in this file: {local_data_path}
+                    selected these options: {selected_profiles}
+                    (and there's a problem with this one: {each_option})
+                    
+                    Your info file: {path}
+                    only lists these options available: {list(available_profiles.keys())}
+                    Look for "(project)" -> "(profiles)" -> *option*,to see them
+                    
+                    LIKELY SOLUTION:
+                        Edit your local config: {local_data_path}
+                        And remove "- {each_option}"
+                    ---------------------------------------------------------------------------------
+                    
+                """.replace("\n                ", "\n"))
+        
+        # 
+        # gather all the direct override args
+        # 
         # allow for a little yaml shorthand
         # thing:thing2:value >>> thing: { thing2: value }
         config_args = []
@@ -432,35 +460,11 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                         ex: 'thing: value'
                     ---------------------------------------------------------------------------------
                 """.replace("\n                    ", "\n"))
-        
+        # 
         # merge in all the cli data
+        # 
         for each_dict in config_data_from_cli:
             config = recursive_update(config, each_dict)
-    
-    # 
-    # merge in all the options data
-    # 
-    for each_option in selected_profiles:
-        try:
-            config = recursive_update(config, available_profiles[each_option])
-        except KeyError as error:
-            raise Exception(f"""
-            
-                ---------------------------------------------------------------------------------
-                Your local config choices in this file: {local_data_path}
-                selected these options: {selected_profiles}
-                (and there's a problem with this one: {each_option})
-                
-                Your info file: {path}
-                only lists these options available: {list(available_profiles.keys())}
-                Look for "(project)" -> "(profiles)" -> *option*,to see them
-                
-                LIKELY SOLUTION:
-                    Edit your local config: {local_data_path}
-                    And remove "- {each_option}"
-                ---------------------------------------------------------------------------------
-                
-            """.replace("\n                ", "\n"))
     
     # convert everything recursively
     recursive_lazy_dict = lambda arg: arg if not isinstance(arg, dict) else LazyDict({ key: recursive_lazy_dict(value) for key, value in arg.items() })
@@ -512,7 +516,7 @@ def resolve_profiles(available_profiles, path):
                         # 
                         # perform the inheritance
                         # 
-                        pending_inheriting_profiles[each_profile_name] = recursive_update(pending_inheriting_profiles[each_profile_name], parent_profile)
+                        pending_inheriting_profiles[each_profile_name] = recursive_update(parent_profile, pending_inheriting_profiles[each_profile_name])
                         continue
                     # parent is not resolved (skip for now)
                     else:

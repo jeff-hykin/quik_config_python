@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "quik_config"
-version = "1.5.2"
+version = "1.5.3"
 description = "Project config files"
 authors=[]
 

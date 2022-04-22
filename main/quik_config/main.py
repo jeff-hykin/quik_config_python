@@ -1,13 +1,12 @@
 import os
 from collections import namedtuple
+import json
 
 from super_map import Map, LazyDict
 from walk_up import walk_up_until
-from dict_recursive_update import recursive_update
 import ez_yaml
 import ruamel.yaml
 import regex as re
-import json
 
 def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True, show_help_for_no_args=False):
     """
@@ -489,6 +488,29 @@ def yaml_string_value(value):
     # remove the "--%YAML 1.2" stuff and trailing newline
     return ez_yaml.to_string(obj=value)[14:-1]
 
+def recursive_copy(a_value):
+    if isinstance(a_value, dict):
+        new = {}
+        for each_key, each_value in a_value.items():
+            new[each_key] = recursive_copy(each_value)
+        return new
+    elif isinstance(a_value, (list, tuple)):
+        return [ recursive_copy(each) for each in a_value ]
+    else:
+        return a_value
+
+def recursive_update(old_values, new_values):
+    if not isinstance(old_values, dict) or not isinstance(new_values, dict):
+        raise TypeError('Params of recursive_update should be dicts')
+
+    for key in new_values:
+        if isinstance(new_values[key], dict) and isinstance(old_values.get(key), dict):
+            old_values[key] = recursive_update(old_values[key], new_values[key])
+        else:
+            old_values[key] = new_values[key]
+
+    return old_values
+
 def resolve_profiles(available_profiles, path):
     resolved_profiles = {}
     pending_inheriting_profiles = dict(available_profiles)
@@ -496,7 +518,6 @@ def resolve_profiles(available_profiles, path):
     while len(pending_inheriting_profiles) > 0:
         copy = dict(pending_inheriting_profiles)
         for each_profile_name, each_profile in copy.items():
-            # check,move pending to
             if "(inherit)" not in each_profile:
                 resolved_profiles[each_profile_name] = pending_inheriting_profiles[each_profile_name]
                 del pending_inheriting_profiles[each_profile_name]
@@ -514,15 +535,16 @@ def resolve_profiles(available_profiles, path):
                         # 
                         # perform the inheritance
                         # 
-                        pending_inheriting_profiles[each_profile_name] = recursive_update(parent_profile, pending_inheriting_profiles[each_profile_name])
+                        pending_inheriting_profiles[each_profile_name] = recursive_update(recursive_copy(parent_profile), pending_inheriting_profiles[each_profile_name])
                         continue
                     # parent is not resolved (skip for now)
                     else:
                         new_parents.append(each_parent)
-                each_profile["(inherit)"] = new_parents
+                pending_inheriting_profiles[each_profile_name]["(inherit)"] = new_parents
                 # remove key once all resolved
                 if len(new_parents) == 0:
-                    del each_profile["(inherit)"]
+                    del pending_inheriting_profiles[each_profile_name]["(inherit)"]
+                
     return resolved_profiles
 
 import sys

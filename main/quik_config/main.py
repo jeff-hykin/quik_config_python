@@ -498,11 +498,9 @@ def resolve_profiles(available_profiles, path):
         for each_profile_name, each_profile in copy.items():
             # check,move pending to
             if "(inherit)" not in each_profile:
-                print(f'''inherit not in: {each_profile}''')
                 resolved_profiles[each_profile_name] = pending_inheriting_profiles[each_profile_name]
                 del pending_inheriting_profiles[each_profile_name]
             else:
-                print(f'''inherit in: {each_profile}''')
                 new_parents = []
                 if not isinstance(each_profile["(inherit)"], (list, tuple)):
                     raise Exception(f'''\n\nin the '{path}' file,\nthe {each_profile_name} profile has an (inherit): key\nBut its not a list, and it needs to be a list of strings''')
@@ -522,7 +520,6 @@ def resolve_profiles(available_profiles, path):
                     else:
                         new_parents.append(each_parent)
                 each_profile["(inherit)"] = new_parents
-                print(f'''    new_parents = {new_parents}''')
                 # remove key once all resolved
                 if len(new_parents) == 0:
                     del each_profile["(inherit)"]

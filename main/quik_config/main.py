@@ -512,11 +512,28 @@ def recursive_update(old_values, new_values):
     return old_values
 
 def resolve_profiles(available_profiles, path):
+    import math
     resolved_profiles = {}
     pending_inheriting_profiles = dict(available_profiles)
-    # TODO: detect circular inheritance
+    prev_number_of_pending_inherits = math.inf
     while len(pending_inheriting_profiles) > 0:
+        # make a copy because we're going to be editing the pending_inheriting_profiles, which would screw with the iteration
         copy = dict(pending_inheriting_profiles)
+        
+        # check for no-progress (which means circular dependency)
+        number_of_pending_inherits = sum(len(each.get("(inherit)", [])) for each in copy.values()) + len(copy)
+        if number_of_pending_inherits != prev_number_of_pending_inherits:
+            # keep track of previous
+            prev_number_of_pending_inherits = number_of_pending_inherits
+        else:
+            print(f"\n\nWarning: there appears to be circular inheritance somewhere among these profiles\nNote this is coming from: {path}\n")
+            inherits = tuple((each_key, each["(inherit)"]) for each_key, each in copy.items() if "(inherit)" in each)
+            for each_key, each_list in inherits:
+                print(f'''    {each_key}: {each_list}''')
+            print()
+            break
+        
+        # actually resolve the profiles
         for each_profile_name, each_profile in copy.items():
             if "(inherit)" not in each_profile:
                 resolved_profiles[each_profile_name] = pending_inheriting_profiles[each_profile_name]

@@ -525,7 +525,7 @@ def resolve_profiles(available_profiles, path):
                 new_parents = []
                 if not isinstance(each_profile["(inherit)"], (list, tuple)):
                     raise Exception(f'''\n\nin the '{path}' file,\nthe {each_profile_name} profile has an (inherit): key\nBut its not a list, and it needs to be a list of strings''')
-                for each_parent in each_profile["(inherit)"]:
+                for each_parent in reversed(each_profile["(inherit)"]):
                     if each_parent not in available_profiles:
                         if not isinstance(each_profile["(inherit)"], (list, tuple)):
                             raise Exception(f'''\n\nin the '{path}' file,\nthe {each_profile_name} profile has an (inherit): key\nAnd one of the things its trying to inherit from is: {each_parent}\nThe problem is I don't see a {each_parent} profile.\n\nAvailable Profiles: {list(available_profiles.keys())}''')

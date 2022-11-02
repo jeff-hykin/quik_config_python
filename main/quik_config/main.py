@@ -8,7 +8,7 @@ import ez_yaml
 import ruamel.yaml
 import regex as re
 
-def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True, show_help_for_no_args=False):
+def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True, show_help_for_no_args=False):
     """
         Example Python:
             # basic call
@@ -58,6 +58,8 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
                     
                     OPTION3: !load_yaml_file ./options/opt3.yaml
     """
+    if fully_parse_args:
+        parse_args = True
     
     # 
     # load the yaml
@@ -182,11 +184,12 @@ def find_and_load(file_name, *, parse_args=False, args=None, defaults_for_local_
         # 
         unused_args = []
         remaining_args = list(args)
-        while len(remaining_args) > 0:
-            if remaining_args[0] == '--':
-                remaining_args.pop(0)
-                break
-            unused_args.append(remaining_args.pop(0))
+        if not fully_parse_args:
+            while len(remaining_args) > 0:
+                if remaining_args[0] == '--':
+                    remaining_args.pop(0)
+                    break
+                unused_args.append(remaining_args.pop(0))
         resume_unused = False
         second_half_unused = list(remaining_args)
         new_remaining_args = []

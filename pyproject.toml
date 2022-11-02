@@ -12,7 +12,6 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.12"
-pip = "20.1.1"
 dict-recursive-update = "1.0.1"
 super-map = "^1.1.1"
 walk-up = "^0.1.0"

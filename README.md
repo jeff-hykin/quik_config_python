@@ -162,7 +162,7 @@ python ./run.py
 
 Running that will output:
 
-```
+```py
 config: {
     "mode": "development",
     "has_gpu": False,
@@ -207,7 +207,7 @@ python ./run.py arg1 -- @PROD'
 
 Output:
 
-```
+```py
 config: {
     "mode": "production",
     "has_gpu": False,
@@ -227,7 +227,7 @@ Again but with custom arguments:
 python ./run.py arg1 --  mode:my_custom_mode  constants:tau:6.2831853072
 ```
 
-```
+```py
 config: {
     "mode": "my_custom_mode",
     "has_gpu": False,
@@ -250,7 +250,7 @@ python ./run.py arg1 --  mode:my_custom_mode  'constants: { tau: 6.2831853072, p
 
 prints:
 
-```
+```py
 config: {
     "mode": "my_custom_mode", 
     "has_gpu": False, 

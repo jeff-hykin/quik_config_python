@@ -1,13 +1,11 @@
 import os
 from collections import namedtuple
 import json
+import re
 
-from __dependencies__.walk_up import walk_up_until
-from __dependencies__.super_map import walk_up_until
-from super_map import Map, LazyDict
-import ez_yaml
-import ruamel.yaml
-import regex as re
+from .__dependencies__.walk_up import walk_up_until
+from .__dependencies__.super_map import Map, LazyDict
+from .__dependencies__ import ez_yaml
 
 def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True, show_help_for_no_args=False):
     """

@@ -26,11 +26,6 @@ setuptools.setup(
     license=package_info["license"],
     packages=[package_info["name"]],
     install_requires=[
-        'dict-recursive-update == 1.0.1',
-        'super-map >= 1.1.1',
-        'walk-up >= 0.1.0',
-        'ez-yaml >= 1.2.0',
-        'regex >= 2022.3.2',
         # examples:
         # 'aiohttp >= 3.7.4',
         # 'python-socketio >= 5.3.0',

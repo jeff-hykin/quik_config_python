@@ -170,9 +170,16 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
     # 
     # parse cli arguments
     #
-    if True: 
+    if True:
+        import sys
+        direct_args = args != None
+        looking_for_double_dash = parse_args and not direct_args
+        
+        command_prefix = f'python {sys.argv[0]} '
+        if looking_for_double_dash:
+            command_prefix += "-- "
+        
         if parse_args and args is None:
-            import sys
             args = list(sys.argv)
             args.pop(0) # remove the path of the python file
         
@@ -184,7 +191,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         # 
         unused_args = []
         remaining_args = list(args)
-        if not fully_parse_args:
+        if looking_for_double_dash:
             while len(remaining_args) > 0:
                 if remaining_args[0] == '--':
                     remaining_args.pop(0)
@@ -226,21 +233,17 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
                     {path}
                 
                 examples:
-                    python3 ./ur_file.py   --  --help --profiles
-                    python3 ./ur_file.py   --  --help key1
-                    python3 ./ur_file.py   --  --help key1:subKey
-                    python3 ./ur_file.py   --  --help key1:subKey key2
-                    python3 ./ur_file.py   --  --profiles='[YOUR_PROFILE, YOUR_OTHER_PROFILE]'
-                    python3 ./ur_file.py   --  thing1:"Im a new value"          part2:"10000"
-                    python3 ./ur_file.py   --  thing1:"I : cause errors"        part2:10000
-                    python3 ./ur_file.py   --  'thing1:"I : dont cause errors"  part2:10000
-                    python3 ./ur_file.py   --  'thing1:["Im in a list"]'
-                    python3 ./ur_file.py   --  'thing1:part_A:"Im nested"'
-                    python3 ./ur_file.py "I get sent to ./ur_file.py" --  part2:"new value"
-                    python3 ./ur_file.py "I get ignored" "me too"  --  part2:10000
+                    {command_prefix} --help --profiles
+                    {command_prefix} --help key1
+                    {command_prefix} --help key1:sub_key
+                    {command_prefix} --help key1:sub_key key2
+                    {command_prefix} thing1:"Im a new value"          part2:"10000"
+                    {command_prefix} thing1:"I : cause errors"        part2:10000
+                    {command_prefix} 'thing1:"I : dont cause errors"  part2:10000
+                    {command_prefix} 'thing1:["Im in a list"]'
+                    {command_prefix} 'thing1:part_a:"Im nested"'
                 
                 how it works:
-                    - the "--" is a required argument, quik config only looks after the --
                     - given "thing1:10", "thing1" is the key, "10" is the value
                     - All values are parsed as json/yaml
                         - "true" is boolean true
@@ -281,16 +284,26 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
                 if args_after_help[0] == "--profiles":
                     args_after_help.pop(0) # remove the "--profiles" arg
                     
+                    available_profile_names = list(available_profiles.keys())
+                    available_profile_names = [ each for each in available_profile_names if each != '(default)']
                     # if that was the only arg
                     if len(args_after_help) == 0:
-                        print("\navailable profiles:")
-                        for each in available_profiles:
-                            if each != '(default)':
+                        if len(available_profiles) == 0:
+                            print(f"I don't see any available profiles")
+                            print(f"If that is strange, open up {path} and look for (profiles):")
+                            print(f"See https://github.com/jeff-hykin/quik_config_python for a complete explanation")
+                        else:
+                            print("\navailable profiles:")
+                            for each in available_profiles:
                                 print(f"    - {each}")
-                        print("\nas cli argument:")
-                        for each in available_profiles:
-                            if each != '(default)':
-                                print(f"   -- --profiles='{json.dumps([each])}'")
+                            print("\nexample usage:")
+                            if all(each.isidentifier() for each in available_profile_names):
+                                print(command_prefix+f" @{available_profile_names[0]}")
+                                if len(available_profile_names) > 1:
+                                    print(command_prefix+f" @{available_profile_names[0]} @{available_profile_names[1]}")
+                            else:
+                                for each in available_profile_names:
+                                    print(command_prefix + f"--profiles='{json.dumps([each])}'")
                     else:
                         print("")
                         print(f"here are the values for: {args_after_help}")

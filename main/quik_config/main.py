@@ -2,8 +2,9 @@ import os
 from collections import namedtuple
 import json
 
+from __dependencies__.walk_up import walk_up_until
+from __dependencies__.super_map import walk_up_until
 from super_map import Map, LazyDict
-from walk_up import walk_up_until
 import ez_yaml
 import ruamel.yaml
 import regex as re

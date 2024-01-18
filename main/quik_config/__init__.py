@@ -2,7 +2,6 @@ import os
 from collections import namedtuple
 import json
 import re
-import sys
 
 from .__dependencies__.walk_up import walk_up_until
 from .__dependencies__.super_map import Map, LazyDict
@@ -192,6 +191,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         looking_for_double_dash = parse_args and not args_were_given and not fully_parse_args
         
         # for error messages:
+        import sys
         command_prefix = f'python {sys.argv[0]} '
         if looking_for_double_dash:
             command_prefix += "-- "

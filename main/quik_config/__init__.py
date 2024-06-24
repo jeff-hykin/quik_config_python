@@ -79,6 +79,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
             raise Exception(f'''\n\nThis is an error while trying to load your local_data file\nI started inside this folder: {os.getcwd()}\nthen I looked for this file: {file_name}\nI checked all the parent folders too and I was unable to find that file.\n\nToDo: Please create that file or possibly run your command from a different directory''')
         root_path = FS.dirname(path)
         if cd_to_filepath: os.chdir(root_path)
+        path_to_main_config = path
         info = ez_yaml.to_object(file_path=path, load_nested_yaml=True)
         project = info.get("(project)", {})
         # TODO: add error if missing
@@ -127,7 +128,31 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         available_profiles = project.get("(profiles)", {})
         help_structure     = project.get("(help)", None)
         
-        # handle the (inherit)
+        # 
+        # load profile sources
+        #
+        sources_and_profile_keys = {
+            path_to_main_config: list(available_profiles.keys()),
+        }
+        for each in reversed(info.get("(profile_sources)", [])):
+            path_of_source = os.path.join(root_path, each)
+            new_profile_options = ez_yaml.to_object(file_path=path_of_source, load_nested_yaml=True)
+            if type(new_profile_options) != dict:
+                raise Exception(f'''\n\nThe profile source: {path_of_source} was not a dictionary\n\n{new_profile_options}''')
+            
+            sources_and_profile_keys[path_of_source] = list(new_profile_options.keys())
+            available_profiles = recursive_update(available_profiles, new_profile_options)
+        
+        # maybe later warn about overlapping keys
+        # overlapping_keys = []
+        # all_keys = set()
+        # for each_path, keys_for_path in sources_and_profile_keys.items():
+        #     overlapping_keys += [*(all_keys & set(keys_for_path))]
+        #     all_keys |= set(keys_for_path)
+    
+        # 
+        # handle the "(inherit)"
+        # 
         available_profiles = resolve_profiles(available_profiles, path)
         
         if local_data_path:

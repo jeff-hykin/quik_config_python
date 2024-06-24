@@ -290,7 +290,12 @@ info.absolute_path_to.blah_file # nice when then PWD != folder of the info file
 ```
 
 ### Import other yaml files
-FIXME
+```yaml
+(project):
+    (profiles):
+        (GPU): !load_yaml_file ./profiles/gpu.yaml
+```
+
 
 ## Different Profiles For Different Machines
 

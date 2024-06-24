@@ -134,6 +134,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         sources_and_profile_keys = {
             path_to_main_config: list(available_profiles.keys()),
         }
+        profiles_from_source = {}
         for each in reversed(info.get("(profile_sources)", [])):
             path_of_source = os.path.join(root_path, each)
             new_profile_options = ez_yaml.to_object(file_path=path_of_source, load_nested_yaml=True)
@@ -141,7 +142,10 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
                 raise Exception(f'''\n\nThe profile source: {path_of_source} was not a dictionary\n\n{new_profile_options}''')
             
             sources_and_profile_keys[path_of_source] = list(new_profile_options.keys())
-            available_profiles = recursive_update(available_profiles, new_profile_options)
+            profiles_from_source = recursive_update(profiles_from_source, new_profile_options)
+        
+        # config.yaml takes precedence over (profile_sources)
+        recursive_update(profiles_from_source, available_profiles)
         
         # maybe later warn about overlapping keys
         # overlapping_keys = []

@@ -23,7 +23,16 @@ info = find_and_load(
     fully_parse_args=True, # if you already have argparse, use parse_args=True instead
     show_help_for_no_args=False, # change if you want
 )
-
+# info.path_to
+# info.absolute_path_to
+# info.unused_args
+# info.secrets
+# info.available_profiles
+# info.selected_profiles
+# info.root_path
+# info.project
+# info.local_data
+# info.as_dict
 print(info.config) # dictionary
 ```
 

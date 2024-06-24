@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:jeff-hykin/ez_yaml.git
 	branch = master
-	commit = 20b701c9bd1b68c161fdbb925f7bcd924b94b8f3
-	parent = 7e2077441688419354b7594a238436c5252a5c06
+	commit = b9d040b997b1a0ec69c53ee30782bb98854d5b37
+	parent = 4f8678f009e7ed8044f99794dd6b53f4f5912a16
 	method = merge
-	cmdver = 0.4.1
+	cmdver = 0.4.5

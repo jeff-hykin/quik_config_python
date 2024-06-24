@@ -12,7 +12,7 @@ from .__dependencies__ import ez_yaml
 class Config(LazyDict):
     pass
 
-def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True, show_help_for_no_args=False):
+def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True, show_help_for_no_args=False, override_profiles=[], override_config={}):
     """
         Example Python:
             # basic call
@@ -158,6 +158,12 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
                         - Add {each_option} to "(profiles)" in {path}
                     ---------------------------------------------------------------------------------
                 """.replace("\n                ", "\n"))
+    
+    if len(override_profiles) > 0:
+        if parse_args or fully_parse_args:
+            print("""WARNING: find_and_load() is being called with parse_args=True, but because of override_profiles, the command line profiles will be ignored""")
+        selected_profiles = override_profiles
+    else:
         if selected_profiles is None:
             if not isinstance(local_data_path, str):
                 selected_profiles = []
@@ -185,14 +191,12 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
             args = []
             # if allowed, get them from sys
             if fully_parse_args or parse_args:
-                import sys
                 args = list(sys.argv)
                 args.pop(0) # remove the path of the python file
         
         looking_for_double_dash = parse_args and not args_were_given and not fully_parse_args
         
         # for error messages:
-        import sys
         command_prefix = f'python {sys.argv[0]} '
         if looking_for_double_dash:
             command_prefix += "-- "
@@ -491,6 +495,8 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         # 
         for each_dict in config_data_from_cli:
             config = recursive_update(config, each_dict)
+        
+        config = recursive_update(config, override_config)
     
     # convert everything recursively
     recursive_lazy_dict = lambda arg: arg if not isinstance(arg, dict) else Config({ key: recursive_lazy_dict(value) for key, value in arg.items() })
@@ -506,10 +512,33 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         project=project,
         local_data=local_data,
         as_dict=info,
+        kwargs=dict(
+            file_name=file_name,
+            fully_parse_args=fully_parse_args,
+            parse_args=parse_args,
+            args=args,
+            defaults_for_local_data=defaults_for_local_data,
+            cd_to_filepath=cd_to_filepath,
+            show_help_for_no_args=show_help_for_no_args,
+            override_profiles=override_profiles,
+            override_config=override_config,
+        ),
     ))
     # convert to named tuple for easier argument unpacking
     Info = namedtuple('Info', " ".join(list(dict_output.keys())))
     return Info(**dict_output)
+
+def generate_configs(*, info, profiles_and_overrides):
+    kwargs = info.kwargs
+    kwargs["fully_parse_args"] = False
+    kwargs["parse_args"] = False
+    configs = []
+    for each in profiles_and_overrides:
+        new_kwargs = dict(kwargs)
+        new_kwargs["override_profiles"] = each.get("profiles", [])
+        new_kwargs["override_config"] = each.get("config", {})
+        configs = find_and_load(**new_kwargs)
+    return configs
 
 def yaml_string_value(value):
     # remove the "--%YAML 1.2" stuff and trailing newline

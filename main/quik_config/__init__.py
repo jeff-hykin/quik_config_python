@@ -135,7 +135,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
             path_to_main_config: list(available_profiles.keys()),
         }
         profiles_from_source = {}
-        for each in reversed(info.get("(profile_sources)", [])):
+        for each in project.get("(profile_sources)", []):
             path_of_source = os.path.join(root_path, each)
             new_profile_options = ez_yaml.to_object(file_path=path_of_source, load_nested_yaml=True)
             if type(new_profile_options) != dict:
@@ -146,6 +146,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         
         # config.yaml takes precedence over (profile_sources)
         recursive_update(profiles_from_source, available_profiles)
+        available_profiles = profiles_from_source
         
         # maybe later warn about overlapping keys
         # overlapping_keys = []

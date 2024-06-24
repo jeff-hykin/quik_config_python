@@ -13,6 +13,10 @@
     # below are options that the config file can choose
     #     when multiple options are selected
     #     their keys/values will be merged recursively
+    (profile_sources):
+        - source1.yaml
+        - source2.yaml
+    
     (profiles):
         (default):
             mode: development

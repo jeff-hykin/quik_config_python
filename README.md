@@ -299,9 +299,18 @@ info.absolute_path_to.blah_file # nice when then PWD != folder of the info file
 ```
 
 ### Import other yaml files
+
+You can import multiple profiles by specifying profile sources.<br>
+NOTE: the last profile source will override (merge keys) with the previous ones, but the main config will take the priority over any/all profile sources.
+
 ```yaml
 (project):
+    (profile_sources):
+        - ./comments.yaml
+        - ./camera_profiles.yaml
+    
     (profiles):
+        # you can also load a single profile as a file
         (GPU): !load_yaml_file ./profiles/gpu.yaml
 ```
 

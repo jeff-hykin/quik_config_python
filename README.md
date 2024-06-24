@@ -2,11 +2,11 @@
 
 A config system that doesn't waste your time
 - per-machine settings that stay in sync
+- all values in the hierarchy can be overridden with CLI args
+- select multiple profiles from CLI (ex: GPU & DEV or UNIX & GPU & PROD)
 - a consistent way to handle filepaths (stop hardcoding filepaths as python strings!)
 - hierarchical, with inheritable groups of settings (profiles)
 - default works along side `argparse`, but also can just replace it entirely for rapid development
-- all values in the hierarchy can be overridden with CLI args
-- select multiple profiles from CLI (ex: GPU & DEV or UNIX & GPU & PROD)
 - can combine/import multiple config files
 
 # How do I use this?

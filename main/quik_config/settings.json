@@ -6,6 +6,10 @@
         "super_map": {
             "path": "__sources__/super_map/main/super_map"
         },
+        "super_hash": {
+            "git_url": "git@github.com:jeff-hykin/super_hash.git",
+            "path": "__sources__/super_hash/main/super_hash/"
+        },
         "ez_yaml": {
             "path": "__sources__/ez_yaml/main/ez_yaml"
         }

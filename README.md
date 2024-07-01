@@ -499,7 +499,7 @@ config: {
 unused_args: ["arg1"]
 ```
 
-## Auto Generate Config-Specific Log folders
+## Auto Generate Config-Specific Log Folders
 
 If you add `path_from_config_to_log_folder="../logs",` as an argument to `find_and_load`
 - The config is hashed

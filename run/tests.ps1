@@ -25,7 +25,10 @@ for (const each of await FileSystem.recursivelyListItemsIn(testsFolder)) {
         const relativePart = FileSystem.makeRelativePath({ from: testsFolder, to: each.path })
         const logPath = `${logsFolder}/${relativePart}.log`
         const logRelativeToProject = FileSystem.makeRelativePath({ from: `${testsFolder}/..`, to: logPath })
-        const pathOutsideOfProject = FileSystem.normalize(`${FileSystem.thisFolder}/../`)
+        let pathOutsideOfProject = FileSystem.normalize(`${FileSystem.thisFolder}/../`)
+        if (pathOutsideOfProject.endsWith("/")) {
+            pathOutsideOfProject = pathOutsideOfProject.slice(0, -1)
+        }
         await FileSystem.clearAPathFor(logPath, {overwrite: true})
         try {
             if (each.path.endsWith(".yaml") || each.path.endsWith(".yml") || each.path.endsWith(".json")) {
@@ -47,7 +50,7 @@ for (const each of await FileSystem.recursivelyListItemsIn(testsFolder)) {
             if (success) {
                 FileSystem.read(logPath).then(async (data) => {
                     await FileSystem.write({
-                        data: data.replace(pathOutsideOfProject, "$PROJECT_ROOT"),
+                        data: data.replaceAll(pathOutsideOfProject, "$PROJECT_ROOT"),
                         path: logPath,
                     })
                 }).catch(console.error)

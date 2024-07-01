@@ -506,8 +506,8 @@ If you add `path_from_config_to_log_folder="../logs",` as an argument to `find_a
 - A folder will be generated for each config
 - A "run_index" is created (incrementes by 1 for each run with the same config)
 - A nested folder will be created for each run
-- `info.unique_config_path` is the unique config folder
-- `info.unique_run_path` is the unique run folder
+- `info.unique_run_path` is probably what you care about the most; the absolute path to log folder for this run
+- `info.unique_config_path` is an absolute path to the unique config folder (summary stats for a specific config)
 
 By default:
 - config path is `./logs/[created_date]__[hash_of_config]/specific_config.yaml`

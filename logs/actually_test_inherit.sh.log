@@ -19,7 +19,7 @@ info = Info(config=dict(
         mode='production', 
         constants=dict(pi=3.14159265358979, ), 
     ), 
-}, selected_profiles=['DEV'], root_path='/Users/jeffhykin/repos/quik_config_python/main', project={
+}, selected_profiles=['DEV'], root_path='$PROJECT_ROOT/main', project={
     '(path_to)': dict(this_file='./info.yaml', ), 
     '(local_data)': './local_data.ignore.yaml', 
     '(profiles)': {
@@ -84,5 +84,5 @@ config = dict(
 )
 path_to = dict(this_file='info.yaml', )
 absolute_path_to = dict(
-    this_file='/Users/jeffhykin/repos/quik_config_python/main/info.yaml', 
+    this_file='$PROJECT_ROOT/main/info.yaml', 
 )

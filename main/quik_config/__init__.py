@@ -632,7 +632,7 @@ def find_and_load(
             unix_milliseconds=unix_milliseconds,
         )
         
-        log_folder = f'{absolute_root_path}/{path_from_config_to_log_folder}'
+        log_folder = FS.normalize(f'{absolute_root_path}/{path_from_config_to_log_folder}')
         FS.create_folder(log_folder)
         folder_paths = FS.list_folders(log_folder)
         folder_names = [ FS.basename(each) for each in folder_paths ]

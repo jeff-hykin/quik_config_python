@@ -8,15 +8,15 @@
         $PROJECT_ROOT/main/info.yaml
     
     examples:
-        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  --help --profiles
-        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  --help key1
-        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  --help key1:sub_key
-        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  --help key1:sub_key key2
-        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  thing1:"Im a new value"          part2:"10000"
-        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  thing1:"I : cause errors"        part2:10000
-        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  'thing1:"I : dont cause errors"  part2:10000
-        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  'thing1:["Im in a list"]'
-        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  'thing1:part_a:"Im nested"'
+        python $PROJECT_ROOT/tests/main.py --  --help --profiles
+        python $PROJECT_ROOT/tests/main.py --  --help key1
+        python $PROJECT_ROOT/tests/main.py --  --help key1:sub_key
+        python $PROJECT_ROOT/tests/main.py --  --help key1:sub_key key2
+        python $PROJECT_ROOT/tests/main.py --  thing1:"Im a new value"          part2:"10000"
+        python $PROJECT_ROOT/tests/main.py --  thing1:"I : cause errors"        part2:10000
+        python $PROJECT_ROOT/tests/main.py --  'thing1:"I : dont cause errors"  part2:10000
+        python $PROJECT_ROOT/tests/main.py --  'thing1:["Im in a list"]'
+        python $PROJECT_ROOT/tests/main.py --  'thing1:part_a:"Im nested"'
     
     how it works:
         - given "thing1:10", "thing1" is the key, "10" is the value

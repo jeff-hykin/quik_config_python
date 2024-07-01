@@ -8,5 +8,5 @@ config = dict(
 )
 path_to = dict(this_file='info.yaml', )
 absolute_path_to = dict(
-    this_file='/Users/jeffhykin/repos/quik_config_python/main/info.yaml', 
+    this_file='$PROJECT_ROOT/main/info.yaml', 
 )

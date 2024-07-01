@@ -1,6 +1,7 @@
-info.log_folder = $PROJECT_ROOT/tests/../logs/autolog
-config = dict(
-    mode='development', 
-    has_gpu=False, 
-    constants=dict(pi=3, ), 
-)
+(f'''info.log_folder = {info.log_folder}''') info.log_folder = $PROJECT_ROOT/logs/autolog
+(info.this_run.run_index) 3
+(info.this_run.git_commit) b442842e0f642b3c3d470a01e50f621bd6c19031
+(info.this_run.start_time) 2024-07-01 15:32:59.742005
+(info.unique_run_path) $PROJECT_ROOT/logs/autolog/hi348dc09/0003__2024-07-01--15-32__b44284
+(info.unique_config_path) $PROJECT_ROOT/logs/autolog/hi348dc09
+(info.log_folder) $PROJECT_ROOT/logs/autolog

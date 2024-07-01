@@ -1,0 +1,6 @@
+info.log_folder = $PROJECT_ROOT/tests/../logs/autolog
+config = dict(
+    mode='development', 
+    has_gpu=False, 
+    constants=dict(pi=3, ), 
+)

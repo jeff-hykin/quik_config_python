@@ -6,13 +6,32 @@ import sys
 
 from .__dependencies__.walk_up import walk_up_until
 from .__dependencies__.super_map import Map, LazyDict
+from .__dependencies__.super_hash import super_hash
 from .__dependencies__ import ez_yaml
 
 # effectively just rename the class to make errors more helpful/obvious
 class Config(LazyDict):
     pass
 
-def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True, show_help_for_no_args=False, override_profiles=[], override_config={}):
+def find_and_load(
+    file_name, *,
+    fully_parse_args=False,
+    parse_args=False,
+    args=None,
+    defaults_for_local_data=[],
+    cd_to_filepath=True,
+    show_help_for_no_args=False,
+    override_profiles=[],
+    override_config={},
+    path_from_config_to_log_folder=None,
+    autogen_log=True,
+    config_initial_namer=None,
+    run_namer=None,
+    config_renamer=None,
+    run_index_padding=4,
+    default_git_commit_length=6,
+    config_hash_length=6,
+):
     """
         Example Python:
             # basic call
@@ -36,7 +55,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
             info.absolute_path_to   # same dictionary of paths, but made absolute
             info.unused_args        # all args before a '--' argument
             info.secrets            # (secrets) from the local data file
-            info.available_profiles      # the dictionary of all possible options
+            info.available_profiles # the dictionary of all possible options
             info.selected_profiles  # the dictionary of the local config-choices files
             info.root_path          # parent folder of the .yaml file
             info.project            # the dictionary to everything inside (project)
@@ -78,11 +97,13 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         if path == None:
             raise Exception(f'''\n\nThis is an error while trying to load your local_data file\nI started inside this folder: {os.getcwd()}\nthen I looked for this file: {file_name}\nI checked all the parent folders too and I was unable to find that file.\n\nToDo: Please create that file or possibly run your command from a different directory''')
         root_path = FS.dirname(path)
+        absolute_root_path = FS.absolute_path(root_path)
         if cd_to_filepath: os.chdir(root_path)
         path_to_main_config = path
         info = ez_yaml.to_object(file_path=path, load_nested_yaml=True)
         project = info.get("(project)", {})
-        # TODO: add error if missing
+        if "(project)" not in info:
+            print(f'''\n\nThis warning while trying to load your config file\nI started inside this folder: {os.getcwd()}\nthen I found this file: {path}\nBut I don't see a "(project)" section in it. See the readme for an example of what the yaml file should look like.\n\n''')
 
     # 
     # load PATHS
@@ -209,7 +230,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
                 )
                 selected_profiles = list(defaults_for_local_data)
                 local_data = { "(selected_profiles)" : selected_profiles }
-        selected_profiles = reversed(selected_profiles) # this makes first===highest priority 
+        selected_profiles = list(reversed(selected_profiles)) # this makes first===highest priority 
         config = available_profiles.get("(default)", {})
     
     # 
@@ -552,23 +573,223 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
             show_help_for_no_args=show_help_for_no_args,
             override_profiles=override_profiles,
             override_config=override_config,
+            path_from_config_to_log_folder=path_from_config_to_log_folder,
+            config_hash_length=config_hash_length,
+            autogen_log=autogen_log,
+            config_initial_namer=config_initial_namer,
+            run_namer=run_namer,
+            config_renamer=config_renamer,
         ),
     ))
+    
+    if autogen_log and path_from_config_to_log_folder:
+        # 
+        # grab date/time
+        # 
+        import datetime
+        right_now = datetime.datetime.now()
+        date_string = f"{right_now}".split(" ")[0]
+        time_string = ":".join(f"{right_now}".split(" ")[1].split(":")[0:2])
+        time_with_seconds = f"{right_now}".split(" ")[1].split(".")[0]
+        time_with_milliseconds = f"{right_now}".split(" ")[1]
+        date_time_string = "-".join(f"{right_now}".split(":")[:-1]).replace(" ", "--") # '2024-06-28--17-26'
+        year, month, day, hour, minute, second, _wday, _yday, _isdst = right_now.timetuple()
+        unix_seconds = int(right_now.timestamp())
+        unix_milliseconds = int(right_now.timestamp() * 1000)
+        
+        # 
+        # grab git commit stuff
+        # 
+        git_commit = None
+        try:
+            import subprocess
+            git_commit = subprocess.check_output(['git',"rev-parse", "HEAD"]).decode('utf-8')[0:-1]
+        except Exception as error:
+            pass
+        
+        # 
+        # hash the config
+        # 
+        config_id = super_hash(ez_yaml.to_string(obj=config))[0:config_hash_length]
+        
+        # setup kwargs for config_initial_namer and config_renamer
+        kwargs = dict(
+            now=right_now,
+            date=date_string,
+            time=time_string,
+            time_with_seconds=time_with_seconds,
+            time_with_milliseconds=time_with_milliseconds,
+            datetime=date_time_string,
+            config_hash=config_id,
+            git_commit=git_commit,
+            year=year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+            second=second,
+            unix_seconds=unix_seconds,
+            unix_milliseconds=unix_milliseconds,
+        )
+        
+        log_folder = f'{absolute_root_path}/{path_from_config_to_log_folder}'
+        FS.create_folder(log_folder)
+        folder_paths = FS.list_folders(log_folder)
+        folder_names = [ FS.basename(each) for each in folder_paths ]
+        
+        # 
+        # config-specific folder
+        # 
+        # date_time_string = "-".join(f"{datetime.datetime.now()}".split(":")[:-1]).replace(" ", "--") # '2024-06-28--17-26'
+        config_specific_folder_name = config_id
+        matching_folder_names = [ each for each in folder_names if each.endswith(f"{config_id}") ]
+        if len(matching_folder_names) > 0:
+            config_specific_folder_name = matching_folder_names[0]
+        else:
+            if not config_initial_namer:
+                # prepend created date to make it sortable
+                config_specific_folder_name = f"_{date_string}__{config_id}"
+            else:
+                try:
+                    config_name = config_initial_namer(info=dict_output, config=config, run_index=("0").rjust(run_index_padding, "0"), **kwargs)
+                except Exception as error:
+                    raise Exception(f'''
+                    
+                        Somewhere find_and_load (from quik_config) was called like:
+                        find_and_load(
+                            ...,
+                            config_initial_namer=lambda info, **_: *some code*,
+                            ...,
+                        )
+                        the `config_initial_namer` function needs to return a string
+                        instead it returned this error:
+                            {error}
+                        
+                    '''.replace("\n                    ", "\n"))
+                config_specific_folder_name = f"{config_name}{config_id}"
+        config_specific_path = FS.join(log_folder, config_specific_folder_name)
+        FS.create_folder(config_specific_path)
+        config_specific_config_file_path = FS.join(config_specific_path, "specific_config.yaml")
+        ez_yaml.to_file(file_path=config_specific_config_file_path, obj=config)
+        
+        # 
+        # calculate running data
+        # 
+        this_run = { "run_index": 0, "git_commit": git_commit, "start_time": right_now.isoformat() }
+        path_to_running_data = FS.join(config_specific_path, "running_data.yaml")
+        it_was_a_list_already = False
+        all_run_data = []
+        if FS.exists(path_to_running_data):
+            all_run_data = ez_yaml.to_object(file_path=path_to_running_data, load_nested_yaml=True)
+            if type(all_run_data) == list:
+                it_was_a_list_already = True
+            else:
+                if all_run_data != None:
+                    print(f'''Looks like running_data.yaml is not a list, but a {type(all_run_data)}''')
+                    print(f'''I am deleting that to make it a list''')
+                all_run_data = []
+        
+        indices = [ each["run_index"] for each in all_run_data if isinstance(each, dict) and "run_index" in each ]
+        # use previous index if there is one, otherwise count number of runs in the list
+        prev_index = max(indices) if len(indices) > 0 else len(all_run_data)-1
+        this_run["run_index"] = prev_index+1
+        all_run_data.append(this_run)
+        
+        # 
+        # create run-specific folder
+        # 
+        run_index_string = f"{this_run['run_index']}".rjust(run_index_padding, "0")
+        run_name = f"{run_index_string}__{date_time_string}"
+        if git_commit:
+            run_name = run_name + "__" + git_commit[:default_git_commit_length]
+        
+        if run_namer:
+            kwargs["run_index"] = run_index_string
+            try:
+                run_name = run_namer(info=dict_output, config=config, **kwargs)
+            except Exception as error:
+                raise Exception(f'''
+                
+                    Somewhere find_and_load (from quik_config) was called like:
+                    find_and_load(
+                        ...,
+                        run_namer=lambda info, **_: *some code*,
+                        ...,
+                    )
+                    the `run_namer` function needs to return a string
+                    instead it returned this error:
+                        {error}
+                    
+                '''.replace("\n                ", "\n"))
+        run_specific_path = f"{config_specific_path}/{run_name}"
+        this_run["inital_run_name"] = run_name
+        FS.create_folder(run_specific_path)
+        
+        # 
+        # write the running data
+        # 
+        with open(path_to_running_data, 'w+') as the_file:
+            for each in all_run_data:
+                the_file.write(f"- {json.dumps(each)}\n")
+        
+        this_run["start_time"] = right_now # change it to a date object
+        
+        dict_output.log_folder = log_folder
+        dict_output.unique_config_path = config_specific_path
+        dict_output.unique_run_path = run_specific_path
+        dict_output.this_run = LazyDict(this_run)
+        if config_renamer:
+            try:
+                config_name = config_renamer(info=dict_output, config=config, **kwargs)
+            except Exception as error:
+                raise Exception(f'''
+                
+                    Somewhere find_and_load (from quik_config) was called like:
+                    find_and_load(
+                        ...,
+                        config_renamer=lambda info, **_: *some code*,
+                        ...,
+                    )
+                    the `config_renamer` function needs to return a string
+                    instead it returned this error:
+                        {error}
+                    
+                '''.replace("\n                ", "\n"))
+            old_path = FS.normalize(dict_output.unique_config_path)
+            new_path = FS.normalize(FS.join(log_folder, f"{config_name}{config_id}"))
+            config_specific_path = new_path
+            run_specific_path = f"{config_specific_path}/{run_name}"
+            dict_output.unique_config_path = new_path
+            dict_output.unique_run_path = run_specific_path
+            if FS.normalize(old_path) != FS.normalize(new_path):
+                if FS.is_folder(new_path):
+                    # shallow merge
+                    for each_existing_path in FS.ls(old_path):
+                        each_relative_path = FS.make_relative_path(to=each_existing_path, coming_from=config_specific_path)
+                        each_new_path = f"{new_path}/{each_relative_path}"
+                        FS.delete(each_new_path)
+                        parent_folder = FS.dirname(each_new_path)
+                        FS.create_folder(parent_folder)
+                        move(each_existing_path, parent_folder)
+                else:
+                    move(old_path, new_path)
+    
     # convert to named tuple for easier argument unpacking
     Info = namedtuple('Info', " ".join(list(dict_output.keys())))
     return Info(**dict_output)
 
-def generate_configs(*, info, profiles_and_overrides):
-    kwargs = info.kwargs
-    kwargs["fully_parse_args"] = False
-    kwargs["parse_args"] = False
-    configs = []
-    for each in profiles_and_overrides:
-        new_kwargs = dict(kwargs)
-        new_kwargs["override_profiles"] = each.get("profiles", [])
-        new_kwargs["override_config"] = each.get("config", {})
-        configs = find_and_load(**new_kwargs)
-    return configs
+# TODO: redo this after a pure version of find_and_load (aka no read files, just return the config) exists
+# def generate_configs(*, info, profiles_and_overrides):
+#     kwargs = info.kwargs
+#     kwargs["fully_parse_args"] = False
+#     kwargs["parse_args"] = False
+#     configs = []
+#     for each in profiles_and_overrides:
+#         new_kwargs = dict(kwargs)
+#         new_kwargs["override_profiles"] = each.get("profiles", [])
+#         new_kwargs["override_config"] = each.get("config", {})
+#         configs = find_and_load(**new_kwargs)
+#     return configs
 
 def yaml_string_value(value):
     # remove the "--%YAML 1.2" stuff and trailing newline
@@ -691,7 +912,7 @@ class FileSystem():
     @classmethod
     def create_folder(self, path):
         try:
-            os.makedirs(path)
+            os.makedirs(path, exist_ok=True)
         except:
             pass
         
@@ -831,4 +1052,25 @@ class FileSystem():
     def pwd(self):
         return os.getcwd()
 
+    @classmethod
+    def normalize(self, path):
+        return os.path.normpath(path)
+
 FS = FileSystem
+
+# def int_to_base64ish(num):
+#     if num == 0:
+#         return '0'
+    
+#     is_negative = num < 0
+#     num = abs(num) << 1 # store the sign in the least significant bit
+#     num = num + 1 if is_negative else num
+#     base64_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-/'
+#     num = abs(num)
+#     result = []
+    
+#     while num:
+#         result.append(base64_chars[num % 64])
+#         num //= 64
+    
+#     return ''.join(reversed(result))

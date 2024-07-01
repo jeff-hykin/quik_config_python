@@ -499,6 +499,103 @@ config: {
 unused_args: ["arg1"]
 ```
 
+## Auto Generate Config-Specific Log folders
+
+If you add `path_from_config_to_log_folder="../logs",` as an argument to `find_and_load`
+- The config is hashed
+- A folder will be generated for each config
+- A "run_index" is created (incrementes by 1 for each run with the same config)
+- A nested folder will be created for each run
+- `info.unique_config_path` is the unique config folder
+- `info.unique_run_path` is the unique run folder
+
+By default:
+- config path is `./logs/[created_date]__[hash_of_config]/specific_config.yaml`
+- run path is `./logs/[created_date]__[hash_of_config]/[run_index]__[date]__[git_commit]/`
+    - run index is padded with zeros (ex: `0001`)
+    - If you don't have git, the `__[git_commit]` won't be there
+- The `./logs/[created_date]__[hash_of_config]/running_data.yaml` will look like this:
+```yaml
+# guaranteed one line per run, each line is JSON
+- {"run_index": 0, "git_commit": "1a69c85b61dc52eac7b1edbe13dd78ebbe46ece5", "start_time": "2024-07-01T15:22:09.327494", "inital_run_name": "run/hi2_0000"}
+- {"run_index": 1, "git_commit": "1a69c85b61dc52eac7b1edbe13dd78ebbe46ece5", "start_time": "2024-07-01T15:22:09.341325", "inital_run_name": "0001__2024-07-01--15-22__1a69c8"}
+- {"run_index": 2, "git_commit": "1a69c85b61dc52eac7b1edbe13dd78ebbe46ece5", "start_time": "2024-07-01T15:22:09.541018", "inital_run_name": "0002__2024-07-01--15-22__1a69c8"}
+```
+
+You can customize almost everything:
+- You can rename* any of the folders manually  (and it'll keep working)
+    - *the config path NEEDS to end with the hash of the config, but thats the only constraint
+    - Ex: `./logs/your_name[hash_of_config]/`
+- padding of the run index (ex: `0001`) with `run_index_padding=4,`
+- the length of the config hash (ex: `6`) with `config_hash_length=6,`
+- the length of the git commit (ex: `6`) with `default_git_commit_length=6,`
+- using `config_renamer`, `run_namer`, and `config_initial_namer` like so:
+
+```py
+from quik_config import find_and_load
+
+config_renamer1 = lambda **_: "blahblah_"
+config_renamer2 = lambda config, **_: f"{config.experiment_name}_"
+config_renamer3 = lambda config, time, **_: f"{config.experiment_name}_{time}_"
+config_renamer4 = lambda config, date, time, **_: f"{config.experiment_name}_{date}_{time}_"
+config_renamer5 = lambda config, date, **_: f"{config.experiment_name}_{date}_"
+config_renamer6 = lambda run_index, **_: f"{time}_{run_index}__"
+# NOTE: run_index is a string, because its padded-out with zeros
+
+run_namer1 = lambda **_: "blahblah"
+run_namer2 = lambda run_index, **_: f"{run_index}"
+run_namer3 = lambda run_index, **_: f"runs/{run_index}"
+run_namer4 = lambda info, run_index, date, time, **_: f"runs_{date}/{run_index}"
+# NOTE: for "run_namer", its okay to return "thing/{run_index}"
+#       The sub-folders will be created
+
+# only use this if you want to manually rename these folders
+# (config_renamer would undo your manual rename)
+config_initial_namer1 = lambda **_: "blahblah_"
+config_initial_namer2 = lambda info, time, **_: f"0_{time}_"
+
+# 
+# basic example
+# 
+info = find_and_load(
+    "info.yaml",
+    path_from_config_to_log_folder="../logs",
+    run_index_padding=4,
+    config_hash_length=6,
+    default_git_commit_length=6,
+    config_renamer: lambda date, **_: f"{date}_",
+    run_namer: lambda info, run_index, date, time, **_: f"{run_index}_{date}_{time}_",
+    config_initial_namer: lambda info, time, **_: f"{time}_",
+    config_renamer: lambda info, **_: f"blahblah_", # can "update" the name
+)
+print(info.this_run.run_index) # starts at 0 if this is a new/unique config
+print(info.this_run.git_commit) # full 40-character git commit hash
+print(info.this_run.start_time) # datetime.datetime.now() object (not a string)
+
+print(info.unique_run_path)
+print(info.unique_config_path)
+print(info.log_folder)
+
+# 
+# lambda arg options
+# 
+    lambda date,                   **_: "blah"    # string: "2024-07-01"
+    lambda time,                   **_: "blah"    # string: "17-52" (NOTE: "-" because colon is not valid filename character)
+    lambda datetime,               **_: "blah"    # string: '2024-06-28--17-26'
+    lambda now,                    **_: "blah"    # datetime.datetime object
+    lambda config_hash,            **_: "blah"    # string: "lak4fa"
+    lambda git_commit,             **_: "blah"    # 40-character git commit hash as a string
+    lambda time_with_seconds,      **_: "blah"    # string: "17:52:00"
+    lambda time_with_milliseconds, **_: "blah"    # string: "17:52:00.000"
+    lambda year,                   **_: "blah"    # int
+    lambda month,                  **_: "blah"    # int
+    lambda day,                    **_: "blah"    # int
+    lambda hour,                   **_: "blah"    # int
+    lambda minute,                 **_: "blah"    # int
+    lambda second,                 **_: "blah"    # int
+    lambda unix_seconds,           **_: "blah"    # int
+    lambda unix_milliseconds,      **_: "blah"    # int
+```
 
 <!-- 
 TODO:

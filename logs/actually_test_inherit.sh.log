@@ -70,6 +70,12 @@ info = Info(config=dict(
     show_help_for_no_args=True, 
     override_profiles=[], 
     override_config={}, 
+    path_from_config_to_log_folder=None, 
+    config_hash_length=6, 
+    autogen_log=True, 
+    config_initial_namer=None, 
+    run_namer=None, 
+    config_renamer=None, 
 ))
 config = dict(
     mode='development', 

@@ -1,0 +1,4 @@
+mode: development
+has_gpu: false
+constants:
+   pi: 3

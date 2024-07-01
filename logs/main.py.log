@@ -1,0 +1,55 @@
+
+    
+    ---------------------------------------------------------------------------------
+    QUIK CONFIG HELP
+    ---------------------------------------------------------------------------------
+    
+    open the file below and look for "(profiles)" for more information:
+        /Users/jeffhykin/repos/quik_config_python/main/info.yaml
+    
+    examples:
+        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  --help --profiles
+        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  --help key1
+        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  --help key1:sub_key
+        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  --help key1:sub_key key2
+        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  thing1:"Im a new value"          part2:"10000"
+        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  thing1:"I : cause errors"        part2:10000
+        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  'thing1:"I : dont cause errors"  part2:10000
+        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  'thing1:["Im in a list"]'
+        python /Users/jeffhykin/repos/quik_config_python/tests/main.py --  'thing1:part_a:"Im nested"'
+    
+    how it works:
+        - given "thing1:10", "thing1" is the key, "10" is the value
+        - All values are parsed as json/yaml
+            - "true" is boolean true
+            - "10" is a number
+            - '"10"' is a string (JSON escaping)
+            - '"10\n"' is a string with a newline
+            - '[10,11,hello]' is a list with two numbers and an unquoted string
+            - '{"thing": 10}' is a map/object
+            - "blah blah" is an un-quoted string with a space. Yes its valid YAML
+            - multiline values are valid, you can dump an whole JSON doc as 1 arg
+        - "thing1:10" overrides the "thing1" in the (profiles) of the info.yaml
+        - "thing:subThing:10" is shorthand, 10 is the value, the others are keys
+          it will only override the subThing (and will create it if necessary)
+        - '{"thing": {"subThing":10} }' is long-hand for "thing:subThing:10"
+        - '"thing:subThing":10' will currently not work for shorthand (parse error)
+    
+    options:
+        --help
+        --profiles
+    
+    ---------------------------------------------------------------------------------
+    
+    your default top-level keys:
+        - mode
+        - has_gpu
+        - constants
+    your local defaults file:
+        ./local_data.ignore.yaml
+    your default profiles:
+        - DEV
+    
+    ---------------------------------------------------------------------------------
+
+

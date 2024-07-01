@@ -1,0 +1,5 @@
+dict(
+    mode='development', 
+    has_gpu=False, 
+    constants=dict(pi=3, ), 
+)

@@ -1,0 +1,82 @@
+config.has_gpu = False
+config.constants.pi = 3
+info = Info(config=dict(
+    mode='development', 
+    has_gpu=False, 
+    constants=dict(pi=3, ), 
+), path_to=dict(this_file='info.yaml', ), absolute_path_to=dict(
+    this_file='/Users/jeffhykin/repos/quik_config_python/main/info.yaml', 
+), unused_args=['@PROD'], secrets=dict(example='key29i5805', ), available_profiles={
+    '(default)': dict(
+        mode='development', 
+        has_gpu=False, 
+        constants=dict(pi=3, ), 
+    ), 
+    'DEV': dict(mode='development', ), 
+    'GPU': dict(has_gpu=True, ), 
+    'PROD': dict(
+        has_gpu=True, 
+        mode='production', 
+        constants=dict(pi=3.14159265358979, ), 
+    ), 
+}, selected_profiles=<generator object Sequence.__reversed__ at 0x10107f6d0>, root_path='/Users/jeffhykin/repos/quik_config_python/main', project={
+    '(path_to)': dict(this_file='./info.yaml', ), 
+    '(local_data)': './local_data.ignore.yaml', 
+    '(profiles)': {
+        '(default)': dict(
+            mode='development', 
+            has_gpu=False, 
+            constants=dict(pi=3, ), 
+        ), 
+        'PROD': {
+            '(inherit)': ['GPU', ], 
+            'mode': 'production', 
+            'has_gpu': True, 
+            'constants': dict(pi=3.14159265358979, ), 
+        }, 
+        'DEV': dict(mode='development', ), 
+        'GPU': dict(has_gpu=True, ), 
+    }, 
+}, local_data={
+    '(selected_profiles)': ['DEV', ], 
+    '(secrets)': dict(example='key29i5805', ), 
+}, as_dict={
+    '(project)': {
+        '(path_to)': dict(this_file='./info.yaml', ), 
+        '(local_data)': './local_data.ignore.yaml', 
+        '(profiles)': {
+            '(default)': dict(
+                mode='development', 
+                has_gpu=False, 
+                constants=dict(pi=3, ), 
+            ), 
+            'PROD': {
+                '(inherit)': ['GPU', ], 
+                'mode': 'production', 
+                'has_gpu': True, 
+                'constants': dict(pi=3.14159265358979, ), 
+            }, 
+            'DEV': dict(mode='development', ), 
+            'GPU': dict(has_gpu=True, ), 
+        }, 
+    }, 
+}, kwargs=dict(
+    file_name='info.yaml', 
+    fully_parse_args=False, 
+    parse_args=True, 
+    args=['@PROD', ], 
+    defaults_for_local_data=['DEV', ], 
+    cd_to_filepath=True, 
+    show_help_for_no_args=True, 
+    override_profiles=[], 
+    override_config={}, 
+))
+config = dict(
+    mode='development', 
+    has_gpu=False, 
+    constants=dict(pi=3, ), 
+)
+path_to = dict(this_file='info.yaml', )
+absolute_path_to = dict(
+    this_file='/Users/jeffhykin/repos/quik_config_python/main/info.yaml', 
+)

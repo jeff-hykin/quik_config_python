@@ -1,0 +1,12 @@
+sys.argv = ['/Users/jeffhykin/repos/quik_config_python/tests/test_args.py']
+secrets = dict(example='key29i5805', )
+unused_args = []
+config = dict(
+    mode='development', 
+    has_gpu=False, 
+    constants=dict(pi=3, ), 
+)
+path_to = dict(this_file='info.yaml', )
+absolute_path_to = dict(
+    this_file='/Users/jeffhykin/repos/quik_config_python/main/info.yaml', 
+)

@@ -5,7 +5,7 @@
     ---------------------------------------------------------------------------------
     
     open the file below and look for "(profiles)" for more information:
-        /Users/jeffhykin/repos/quik_config_python/main/info.yaml
+        $PROJECT_ROOT/main/info.yaml
     
     examples:
         python /Users/jeffhykin/repos/quik_config_python/tests/test_inherit.py --  --help --profiles

@@ -5,7 +5,7 @@ info = Info(config=dict(
     has_gpu=False, 
     constants=dict(pi=3, ), 
 ), path_to=dict(this_file='info.yaml', ), absolute_path_to=dict(
-    this_file='/Users/jeffhykin/repos/quik_config_python/main/info.yaml', 
+    this_file='$PROJECT_ROOT/main/info.yaml', 
 ), unused_args=['@PROD'], secrets=dict(example='key29i5805', ), available_profiles={
     '(default)': dict(
         mode='development', 
@@ -19,7 +19,7 @@ info = Info(config=dict(
         mode='production', 
         constants=dict(pi=3.14159265358979, ), 
     ), 
-}, selected_profiles=<generator object Sequence.__reversed__ at 0x10107f6d0>, root_path='/Users/jeffhykin/repos/quik_config_python/main', project={
+}, selected_profiles=['DEV'], root_path='/Users/jeffhykin/repos/quik_config_python/main', project={
     '(path_to)': dict(this_file='./info.yaml', ), 
     '(local_data)': './local_data.ignore.yaml', 
     '(profiles)': {

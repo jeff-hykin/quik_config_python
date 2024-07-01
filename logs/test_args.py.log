@@ -1,4 +1,4 @@
-sys.argv = ['/Users/jeffhykin/repos/quik_config_python/tests/test_args.py']
+sys.argv = ['$PROJECT_ROOT/tests/test_args.py']
 secrets = dict(example='key29i5805', )
 unused_args = []
 config = dict(
